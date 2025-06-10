@@ -68,26 +68,6 @@ typedef struct
 
 typedef struct
 {
-    bool init;
-    bool vcp_connect_state;
-    uint8_t uart_port_num;
-
-    void *Cur_Tuning_Port;
-
-    FrameCTL_VCPPortMonitor_TypeDef VCP_Port;
-    FrameCTL_UartPortMonitor_TypeDef *Uart_Port;
-} FrameCTL_PortMonitor_TypeDef;
-
-typedef struct
-{
-    FrameCTL_PortType_List type;
-    uint32_t port_addr;
-    SrvComProto_Stream_TypeDef *p_rx_stream;
-    SrvComProto_Stream_TypeDef *p_proc_stream;
-} FrameCTL_CLIMonitor_TypeDef;
-
-typedef struct
-{
     bool is_enable;
     bool flash_enable;
     uint32_t port_addr;

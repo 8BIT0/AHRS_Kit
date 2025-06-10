@@ -60,7 +60,6 @@ DataStructure/CusQueue.c \
 DataStructure/linked_list.c \
 DataStructure/binary_tree.c \
 common/Error_Log/error_log.c \
-common/util.c \
 System/FreeRTOS/croutine.c \
 System/FreeRTOS/event_groups.c \
 System/FreeRTOS/list.c \
