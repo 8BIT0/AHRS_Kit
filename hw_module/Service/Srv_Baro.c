@@ -134,16 +134,12 @@ static Error_Obj_Typedef SrvBaro_ErrorList[] = {
 /* external function */
 static uint8_t SrvBaro_Init(void);
 static bool SrvBaro_Sample(void);
-static bool SrvBaro_Get_Date(SrvBaro_UnionData_TypeDef *data);
-static GenCalib_State_TypeList SrvBaro_Set_Calib(uint16_t cyc);
-static GenCalib_State_TypeList SrvBaro_Get_Calib(void);
+static bool SrvBaro_Get_Date(SrvBaroData_TypeDef *data);
 
 SrvBaro_TypeDef SrvBaro = {
     .init = SrvBaro_Init,
     .sample = SrvBaro_Sample,
     .get_data = SrvBaro_Get_Date,
-    .set_calib = SrvBaro_Set_Calib,
-    .get_calib = SrvBaro_Get_Calib,
 };
 
 static bool SrvBaro_BusInit(void)
@@ -210,9 +206,6 @@ static uint8_t SrvBaro_Init(void)
                 return SrvBaro_Error_DevInit;
             }
 
-            SrvBaroObj.calib_state = Calib_Start;
-            SrvBaroObj.calib_cycle = SRVBARO_DEFAULT_CALI_CYCLE;
-
             SrvBaroObj.data_size = DPS310_DataSize;
             SrvBaroObj.sensor_data = SrvOsCommon.malloc(SrvBaroObj.data_size);
         }
@@ -247,45 +240,7 @@ static bool SrvBaro_Sample(void)
         return false;
 
     SrvBaroObj.sample_cnt ++;
-
-    if (((SrvBaroObj.calib_state == Calib_Start) || 
-        (SrvBaroObj.calib_state == Calib_InProcess)) &&
-        SrvBaroObj.calib_cycle)
-    {
-        SrvBaroObj.pressure_add_sum += ToDPS310_OBJ(SrvBaroObj.sensor_obj)->pressure;
-        SrvBaroObj.pressure_add_sum /= 2;
-
-        SrvBaroObj.calib_cycle --;
-
-        if (SrvBaroObj.calib_cycle == 0)
-        {
-            SrvBaroObj.calib_state = Calib_Done;
-            SrvBaroObj.alt_offset = SrvBaro_PessureCnvToMeter(SrvBaroObj.pressure_add_sum);
-            SrvBaroObj.pressure_add_sum = 0.0f;
-        }
-        else
-            SrvBaroObj.calib_state = Calib_InProcess;
-    }
-
     return true;
-}
-
-static GenCalib_State_TypeList SrvBaro_Set_Calib(uint16_t cyc)
-{
-    if (SrvBaroObj.calib_state != Calib_InProcess)
-    {
-        SrvBaroObj.calib_cycle = cyc;
-        SrvBaroObj.calib_state = Calib_Start;
-        SrvBaroObj.alt_offset = 0.0f;
-        return Calib_InProcess;
-    }
-
-    return SrvBaroObj.calib_state;
-}
-
-static GenCalib_State_TypeList SrvBaro_Get_Calib(void)
-{
-    return SrvBaroObj.calib_state;
 }
 
 static float SrvBaro_PessureCnvToMeter(float pa)
@@ -293,13 +248,9 @@ static float SrvBaro_PessureCnvToMeter(float pa)
     return ((1 - pow((pa / STANDER_ATMOSPHERIC_PRESSURE), 0.1903))) * 44330;
 }
 
-static bool SrvBaro_Get_Date(SrvBaro_UnionData_TypeDef *data)
+static bool SrvBaro_Get_Date(SrvBaroData_TypeDef *data)
 {
-    SrvBaro_UnionData_TypeDef baro_data_tmp;
     float alt = 0.0f;
-    uint8_t check_sum = 0;
-
-    memset(baro_data_tmp.buff, 0, sizeof(SrvBaro_UnionData_TypeDef));
 
     if ((SrvBaroObj.init_err != SrvBaro_Error_None) || \
         (data == NULL) || (SrvBaroObj.sensor_data == NULL) || \
@@ -307,26 +258,18 @@ static bool SrvBaro_Get_Date(SrvBaro_UnionData_TypeDef *data)
         !ToDPS310_API(SrvBaroObj.sensor_api)->ready(ToDPS310_OBJ(SrvBaroObj.sensor_obj)))
         return false;
         
-    
     memset(SrvBaroObj.sensor_data, 0, DPS310_DataSize);
     *ToDPS310_DataPtr(SrvBaroObj.sensor_data) = ToDPS310_API(SrvBaroObj.sensor_api)->get_data(ToDPS310_OBJ(SrvBaroObj.sensor_obj));
     
     /* convert baro pressure to meter */
     alt = SrvBaro_PessureCnvToMeter(ToDPS310_DataPtr(SrvBaroObj.sensor_data)->scaled_press);
 
-    baro_data_tmp.data.time_stamp = ToDPS310_DataPtr(SrvBaroObj.sensor_data)->time_stamp;
-    baro_data_tmp.data.cyc = ToDPS310_DataPtr(SrvBaroObj.sensor_data)->cyc;
-    baro_data_tmp.data.pressure_alt_offset = SrvBaroObj.alt_offset;
-    baro_data_tmp.data.pressure_alt = alt - SrvBaroObj.alt_offset;
-    baro_data_tmp.data.tempra = ToDPS310_DataPtr(SrvBaroObj.sensor_data)->scaled_tempra;
-    baro_data_tmp.data.pressure = ToDPS310_DataPtr(SrvBaroObj.sensor_data)->scaled_press;
+    data->time_stamp = ToDPS310_DataPtr(SrvBaroObj.sensor_data)->time_stamp;
+    data->pressure_alt_offset = SrvBaroObj.alt_offset;
+    data->pressure_alt = alt - SrvBaroObj.alt_offset;
+    data->tempra = ToDPS310_DataPtr(SrvBaroObj.sensor_data)->scaled_tempra;
+    data->pressure = ToDPS310_DataPtr(SrvBaroObj.sensor_data)->scaled_press;
 
-    /* doing baro filter */
-    for(uint8_t i = 0; i < sizeof(baro_data_tmp.buff) - sizeof(baro_data_tmp.data.check_sum); i++)
-        check_sum += baro_data_tmp.buff[i];
-    baro_data_tmp.data.check_sum = check_sum;
-    memcpy(data, &baro_data_tmp, sizeof(SrvBaroData_TypeDef));
-    
     return true;
 }
 

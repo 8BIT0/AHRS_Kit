@@ -70,15 +70,13 @@ static Error_Handler SrvMPU_Error_Handle = 0;
  */
 static SrvMpu_Reg_TypeDef SrvMpu_Init_Reg;
 static SrvMpu_Reg_TypeDef SrvMpu_Update_Reg;
-static SrvIMU_Data_TypeDef IMU_Data;
-static SrvIMU_Data_TypeDef IMU_Data_Lst;
+static SrvIMUData_TypeDef IMU_Data;
+static SrvIMUData_TypeDef IMU_Data_Lst;
 
-static SrvIMU_Data_TypeDef PriIMU_Data;
-static SrvIMU_Data_TypeDef PriIMU_Data_Lst;
+static SrvIMUData_TypeDef PriIMU_Data;
 static SrvIMU_InuseSensorObj_TypeDef InUse_PriIMU_Obj;
 
-static SrvIMU_Data_TypeDef SecIMU_Data;
-static SrvIMU_Data_TypeDef SecIMU_Data_Lst;
+static SrvIMUData_TypeDef SecIMU_Data;
 static SrvIMU_InuseSensorObj_TypeDef InUse_SecIMU_Obj;
 
 /************************************************************************ Error Tree Item ************************************************************************/
@@ -87,9 +85,7 @@ static void SrvIMU_SecDev_Filter_InitError(int16_t code, uint8_t *p_arg, uint16_
 static void SrvIMU_Dev_InitError(int16_t code, uint8_t *p_arg, uint16_t size);
 static void SrvIMU_AllModule_InitError(int16_t code, uint8_t *p_arg, uint16_t size);
 static void SrvIMU_PriSample_Undrdy(uint8_t *p_arg, uint16_t size);
-#if (IMU_SUM > 1)
 static void SrvIMU_SecSample_Undrdy(uint8_t *p_arg, uint16_t size);
-#endif
 
 static Error_Obj_Typedef SrvIMU_ErrorList[] = {
     {
@@ -254,11 +250,7 @@ static Error_Obj_Typedef SrvIMU_ErrorList[] = {
 /* external function */
 static SrvIMU_ErrorCode_List SrvIMU_Init(void);
 static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode);
-static bool SrvIMU_Get_Data(SrvIMU_Module_Type type, SrvIMU_Data_TypeDef *data);
-static void SrvIMU_ErrorProc(void);
-static float SrvIMU_Get_MaxAngularSpeed_Diff(void);
-static bool SrvIMU_Get_Range(SrvIMU_Module_Type module, SrvIMU_Range_TypeDef *range);
-static bool SrvIMU_Get_ModuleType(SrvIMU_Module_Type module, SrvIMU_SensorID_List *type);
+static bool SrvIMU_Get_Data(SrvIMU_Module_Type type, SrvIMUData_TypeDef *data);
 
 /* internal function */
 static int8_t SrvIMU_PriIMU_Init(void);
@@ -271,17 +263,12 @@ static void SrvIMU_SecIMU_ExtiCallback(void);
 static void SrvIMU_SecIMU_CS_Ctl(bool state);
 static bool SrvIMU_SecIMU_BusTrans_Rec(uint8_t *Tx, uint8_t *Rx, uint16_t size);
 
-static bool SrvIMU_Detect_AngularOverSpeed(float angular_speed, float lst_angular_speed, float ms_diff);
 static SrvIMU_SensorID_List SrvIMU_AutoDetect(bus_trans_callback trans, cs_ctl_callback cs_ctl);
 
 SrvIMU_TypeDef SrvIMU = {
     .init = SrvIMU_Init,
     .sample = SrvIMU_Sample,
     .get_data = SrvIMU_Get_Data,
-    .get_range = SrvIMU_Get_Range,
-    .error_proc = SrvIMU_ErrorProc,
-    .get_type = SrvIMU_Get_ModuleType,
-    .get_max_angular_speed_diff = SrvIMU_Get_MaxAngularSpeed_Diff,
 };
 
 static SrvIMU_ErrorCode_List SrvIMU_Init(void)
@@ -291,7 +278,6 @@ static SrvIMU_ErrorCode_List SrvIMU_Init(void)
     InUse_PriIMU_Obj.type = SrvIMU_Dev_None;
 
     memset(&PriIMU_Data, 0, sizeof(PriIMU_Data));
-    memset(&PriIMU_Data_Lst, 0, sizeof(PriIMU_Data_Lst));
      
     /* create error log handle */
     SrvMPU_Error_Handle = ErrorLog.create("SrvIMU_Error");
@@ -316,7 +302,6 @@ static SrvIMU_ErrorCode_List SrvIMU_Init(void)
     InUse_SecIMU_Obj.type = SrvIMU_Dev_None;
 
     memset(&SecIMU_Data, 0, sizeof(SecIMU_Data));
-    memset(&SecIMU_Data_Lst, 0, sizeof(SecIMU_Data_Lst));
 
     SrvIMU_ErrorCode_List SecIMU_Init_State = SrvIMU_SecIMU_Init();
     
@@ -644,7 +629,6 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
     bool sec_sample_state = true;
     IMUModuleScale_TypeDef pri_imu_scale;
     IMUModuleScale_TypeDef sec_imu_scale;
-    float Sample_MsDiff = 0.0f;
     static uint32_t SecSample_Rt_Lst = 0;
     bool PriSample_Enable = mode & SrvIMU_Priori_Pri;
     bool SecSample_Enable = mode & SrvIMU_Priori_Sec;
@@ -672,7 +656,6 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
             /* lock */
             SrvMpu_Update_Reg.sec.Pri_State = true;
 
-            PriIMU_Data.cycle_cnt++;
             PriIMU_Data.time_stamp = InUse_PriIMU_Obj.OriData_ptr->time_stamp;
 
             /* check Primary IMU module Sample is correct or not */
@@ -687,9 +670,6 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
                 /* update pri imu data */
                 PriIMU_Data.tempera = InUse_PriIMU_Obj.OriData_ptr->temp_flt;
 
-                /* Pri imu data validation check */
-                Sample_MsDiff = PriIMU_Data.time_stamp - PriSample_Rt_Lst;
-
                 for (i = Axis_X; i < Axis_Sum; i++)
                 {
                     PriIMU_Data.org_acc[i] = InUse_PriIMU_Obj.OriData_ptr->acc_flt[i];
@@ -700,7 +680,7 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
                  
                 /* unlock */
                 SrvMpu_Update_Reg.sec.Pri_State = false;
-                PriIMU_Data_Lst = PriIMU_Data;
+                IMU_Data_Lst = PriIMU_Data;
             }
         }
         else
@@ -728,7 +708,6 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
             /* lock */
             SrvMpu_Update_Reg.sec.Sec_State = true;
 
-            SecIMU_Data.cycle_cnt++;
             SecIMU_Data.time_stamp = InUse_SecIMU_Obj.OriData_ptr->time_stamp;
 
             /* check Secondry IMU module Sample is correct or not */
@@ -743,9 +722,6 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
                 /* update sec imu data */
                 SecIMU_Data.tempera = InUse_SecIMU_Obj.OriData_ptr->temp_flt;
 
-                /* Sec imu data validation check */
-                Sample_MsDiff = (SecIMU_Data.time_stamp - SecSample_Rt_Lst) / 1000.0f;
-
                 for (i = Axis_X; i < Axis_Sum; i++)
                 {
                     SecIMU_Data.org_acc[i] = InUse_SecIMU_Obj.OriData_ptr->acc_flt[i];
@@ -756,7 +732,6 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
                 
                 /* unlock */
                 SrvMpu_Update_Reg.sec.Sec_State = false;
-                SecIMU_Data_Lst = SecIMU_Data;
             }
         }
         else
@@ -770,24 +745,17 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
     else
         sec_sample_state = false;
     
+    IMU_Data = IMU_Data_Lst;
     switch(mode)
     {
         case SrvIMU_Priori_Pri:
             if(pri_sample_state)
-            {
                 IMU_Data = PriIMU_Data;
-            }
-            else
-                IMU_Data = PriIMU_Data_Lst;
         break;
 
         case SrvIMU_Priori_Sec:
             if(!sec_sample_state)
-            {
                 IMU_Data = SecIMU_Data;
-            }
-            else
-                IMU_Data = SecIMU_Data_Lst;
         break;
 
         default: return false;
@@ -800,32 +768,9 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
     return (pri_sample_state | sec_sample_state);
 }
 
-static bool SrvIMU_Get_Range(SrvIMU_Module_Type module, SrvIMU_Range_TypeDef *range)
+static bool SrvIMU_Get_Data(SrvIMU_Module_Type type, SrvIMUData_TypeDef *data)
 {
-    if(((SrvIMU_PriModule == module) || (SrvIMU_SecModule == module)) && range)
-    {
-        if((SrvIMU_PriModule == module) && SrvMpu_Init_Reg.sec.Pri_State)
-        {
-            range->Acc = InUse_PriIMU_Obj.acc_trip;
-            range->Gyr = InUse_PriIMU_Obj.gyr_trip;
-            
-            return true; 
-        }
-        else if((SrvIMU_SecModule == module) && SrvMpu_Init_Reg.sec.Sec_State)
-        {
-            range->Acc = InUse_SecIMU_Obj.acc_trip;
-            range->Gyr = InUse_SecIMU_Obj.gyr_trip;
-
-            return true;
-        }
-    }
-
-    return false;
-}
-
-static bool SrvIMU_Get_Data(SrvIMU_Module_Type type, SrvIMU_Data_TypeDef *data)
-{
-    SrvIMU_Data_TypeDef imu_data_tmp;
+    SrvIMUData_TypeDef imu_data_tmp;
 
     memset(&imu_data_tmp, 0, IMU_DATA_SIZE);
 
@@ -851,66 +796,13 @@ reupdate_imu:
         else
             goto reupdate_imu_statistics;
     }
-    else if(type == SrvIMU_FusModule)
-    {
-        if(!SrvMpu_Update_Reg.sec.Fus_State)
-        {
-            memcpy(&imu_data_tmp, &IMU_Data, IMU_DATA_SIZE);
-        }
-        else
-            goto reupdate_imu_statistics;
-    }
 
-    memcpy(data, &imu_data_tmp, sizeof(SrvIMU_Data_TypeDef));
+    memcpy(data, &imu_data_tmp, sizeof(SrvIMUData_TypeDef));
     return true;
 
 reupdate_imu_statistics:
     SrvIMU_Reupdate_Statistics_CNT ++;
     goto reupdate_imu;
-}
-
-static bool SrvIMU_Get_ModuleType(SrvIMU_Module_Type module, SrvIMU_SensorID_List *type)
-{
-    if ((module >= SrvIMU_FusModule) || (type == NULL))
-        return false;
-
-    *type = SrvIMU_Dev_None;
-    if (module == SrvIMU_PriModule)
-    {
-        *type = InUse_PriIMU_Obj.type;
-    }
-    else if (module == SrvIMU_SecModule)
-    {
-        *type = InUse_SecIMU_Obj.type;
-    }
-
-    return true;
-}
-
-static float SrvIMU_Get_MaxAngularSpeed_Diff(void)
-{
-    uint16_t pri_angular_diff = 0;
-    uint16_t sec_angular_diff = 0;
-
-    if (SrvMpu_Init_Reg.sec.Pri_State)
-    {
-        pri_angular_diff = (uint16_t)(DevMPU6000.get_gyr_angular_speed_diff(&MPU6000Obj) * ANGULAR_SPEED_ACCURACY);
-    }
-
-    if (SrvMpu_Init_Reg.sec.Sec_State)
-    {
-        sec_angular_diff = (uint16_t)(DevICM20602.get_gyr_angular_speed_diff(&ICM20602Obj) * ANGULAR_SPEED_ACCURACY);
-    }
-
-    if (pri_angular_diff >= sec_angular_diff)
-        return pri_angular_diff / (float)ANGULAR_SPEED_ACCURACY;
-
-    return sec_angular_diff / (float)ANGULAR_SPEED_ACCURACY;
-}
-
-static void SrvIMU_ErrorProc(void)
-{
-    ErrorLog.proc(SrvMPU_Error_Handle);
 }
 
 static SrvIMU_SensorID_List SrvIMU_AutoDetect(bus_trans_callback trans, cs_ctl_callback cs_ctl)
@@ -954,13 +846,11 @@ static void SrvIMU_PriIMU_ExtiCallback(void)
         InUse_PriIMU_Obj.set_drdy(InUse_PriIMU_Obj.obj_ptr);
 }
 
-#if (IMU_SUM > 1)
 static void SrvIMU_SecIMU_ExtiCallback(void)
 {
     if (SrvMpu_Init_Reg.sec.Sec_State)
         InUse_SecIMU_Obj.set_drdy(InUse_SecIMU_Obj.obj_ptr);
 }
-#endif
 
 /*************************************************************** Error Process Callback *******************************************************************************/
 static void SrvIMU_PriDev_Filter_InitError(int16_t code, uint8_t *p_arg, uint16_t size)
@@ -1003,8 +893,6 @@ static void SrvIMU_PriSample_Undrdy(uint8_t *p_arg, uint16_t size)
 {
 }
 
-#if (IMU_SUM > 1)
 static void SrvIMU_SecSample_Undrdy(uint8_t *p_arg, uint16_t size)
 {
 }
-#endif

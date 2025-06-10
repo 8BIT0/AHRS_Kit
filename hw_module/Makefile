@@ -61,8 +61,6 @@ DataStructure/linked_list.c \
 DataStructure/binary_tree.c \
 common/Error_Log/error_log.c \
 common/util.c \
-System/DataPipe/DataPipe.c \
-System/DataPipe/DataPipe_Def.c \
 System/FreeRTOS/croutine.c \
 System/FreeRTOS/event_groups.c \
 System/FreeRTOS/list.c \
@@ -74,11 +72,6 @@ System/FreeRTOS/timers.c \
 System/FreeRTOS/CMSIS_RTOS/cmsis_os.c \
 System/FreeRTOS/portable/MemMang/heap_4.c \
 System/FreeRTOS/portable/GCC/ARM_CM4F/port.c \
-System/shell/shell_cmd_list.c \
-System/shell/shell_companion.c \
-System/shell/shell_ext.c \
-System/shell/shell_port.c \
-System/shell/shell.c \
 System/kernel/kernel_stm32h743.c \
 HW_Lib/STM32H7/BSP/Bsp_GPIO.c \
 HW_Lib/STM32H7/BSP/Bsp_SPI.c \
@@ -202,7 +195,6 @@ C_INCLUDES =  \
 -ISystem/FreeRTOS/include \
 -ISystem/FreeRTOS/CMSIS_RTOS \
 -ISystem/FreeRTOS/portable/GCC/ARM_CM4F \
--ISystem/shell \
 -Idebug \
 -IMAVLink \
 -IMAVLink/common \
@@ -210,7 +202,6 @@ C_INCLUDES =  \
 -IMAVLink/standard \
 -IDataStructure/ \
 -ISystem/kernel/ \
--ISystem/DataPipe/ \
 -IHW_Lib/PortApi_Def/ \
 -IHW_Lib/STM32H7 \
 -IHW_Lib/STM32H7/BSP \

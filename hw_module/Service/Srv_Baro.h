@@ -40,22 +40,12 @@ typedef enum
 typedef struct
 {
     uint32_t time_stamp;
-    uint8_t cyc;
-
     float tempra;
     float pressure;
     float pressure_alt;
     float pressure_alt_offset;
-
-    uint8_t error_code;
     uint8_t check_sum;
 }SrvBaroData_TypeDef;
-
-typedef union
-{
-    uint8_t buff[sizeof(SrvBaroData_TypeDef)];
-    SrvBaroData_TypeDef data;
-}SrvBaro_UnionData_TypeDef;
 
 typedef struct
 {
@@ -79,8 +69,6 @@ typedef struct
     uint32_t sample_cnt;
     uint32_t sample_err_cnt;
 
-    uint16_t calib_cycle;
-    GenCalib_State_TypeList calib_state;
     float pressure_add_sum;
     float alt_offset;
 }SrvBaroObj_TypeDef;
@@ -89,9 +77,7 @@ typedef struct
 {
     uint8_t (*init)(void);
     bool (*sample)(void);
-    GenCalib_State_TypeList (*set_calib)(uint16_t calib_cyc);
-    GenCalib_State_TypeList (*get_calib)(void);
-    bool (*get_data)(SrvBaro_UnionData_TypeDef *data);
+    bool (*get_data)(SrvBaroData_TypeDef *data);
 }SrvBaro_TypeDef;
 
 extern SrvBaro_TypeDef SrvBaro;

@@ -4,11 +4,8 @@
 #include "HW_Def.h"
 #include "error_log.h"
 #include "../FCHW_Config.h"
-#include "../System/DataPipe/DataPipe.h"
 #include "Srv_SensorMonitor.h"
-#include "shell_port.h"
 
-#define ToBoolStr(x) x ? "true" : "false"
 #define DATAPIPE_TRANS_TIMEOUT_100Ms 100
 
 /* internal var */
@@ -30,14 +27,14 @@ void TaskSample_Init(uint32_t period)
     memset(&SecIMU_Range, 0, sizeof(SrvSensorMonitor_IMURange_TypeDef));
     memset(&SensorMonitor, 0, sizeof(SrvSensorMonitorObj_TypeDef));
     
-    SensorMonitor.enabled_reg.bit.imu = true;
     SensorMonitor.freq_reg.bit.imu = SrvSensorMonitor_SampleFreq_1KHz;
-    SensorMonitor.enabled_reg.bit.baro = true;
     SensorMonitor.freq_reg.bit.baro = SrvSensorMonitor_SampleFreq_50Hz;
     sample_enable = SrvSensorMonitor.init(&SensorMonitor);
 
     /* force make sensor sample task run as 1khz freq */
     TaskSample_Period = 1;
+
+    /* usb port init */
 }
 
 void TaskSample_Core(void const *arg)

@@ -85,7 +85,6 @@ typedef struct
     uint32_t min_sampling_overhead; /* unit: 100ns */
     uint32_t avg_sampling_overhead; /* unit: 100ns */
 
-    GenCalib_State_TypeList is_calid;
     uint32_t sample_cnt;
     uint32_t err_cnt;
     uint32_t detect_period;
@@ -95,52 +94,30 @@ typedef struct
 /* bit field on init_state_reg set 1 represent error triggerd on */
 typedef struct
 {
-    SrvSensorMonitor_GenReg_TypeDef enabled_reg;        /* pipe this vriable to datahub after srv_sensormonitor init */
     SrvSensorMonitor_GenReg_TypeDef init_state_reg;     /* pipe thie vriable to datahub after srv_sensormonitor init */
     SrvSensorMonitor_SampleFreqReg_TypeDef freq_reg;
 
     SrvSensorMonitor_Statistic_TypeDef *statistic_imu;
     SrvSensorMonitor_Statistic_TypeDef *statistic_mag;
     SrvSensorMonitor_Statistic_TypeDef *statistic_baro;
-    SrvSensorMonitor_Statistic_TypeDef *statistic_flow;
 
     SrvSensorMonitor_Statistic_TypeDef *statistic_list;
 
-    uint8_t imu_num;
-    bool pri_range_get;
-    bool sec_range_get;
-    SrvSensorMonitor_IMURange_TypeDef PriIMU_Range;
-    SrvSensorMonitor_IMURange_TypeDef SecIMU_Range;
-
     SrvIMU_SampleMode_List IMU_SampleMode;
+    SrvIMUData_TypeDef lst_imu_data;
 
-    uint8_t baro_type;
-    uint8_t baro_bus_type;
     int8_t baro_err;
-
-    uint8_t pri_imu_type;
-    uint8_t sec_imu_type;
-    int8_t pri_imu_err;
-    int8_t sec_imu_err;
+    SrvBaroData_TypeDef lst_baro_data;
 
     uint8_t mag_type;
     uint8_t mag_bus_type;
     int8_t mag_err;
-
-    uint8_t flow_type;
-    uint8_t flow_bus_type;
-    int8_t flow_err;
-
-    SrvIMU_UnionData_TypeDef lst_imu_data;
-    SrvBaro_UnionData_TypeDef lst_baro_data;
  }SrvSensorMonitorObj_TypeDef;
 
 typedef struct
 {
     bool (*init)(SrvSensorMonitorObj_TypeDef *obj);
     bool (*sample_ctl)(SrvSensorMonitorObj_TypeDef *obj);
-    SrvIMU_UnionData_TypeDef (*get_imu_data)(SrvSensorMonitorObj_TypeDef *obj);
-    SrvBaro_UnionData_TypeDef (*get_baro_data)(SrvSensorMonitorObj_TypeDef *obj);
 }SrvSensorMonitor_TypeDef;
 
 extern SrvSensorMonitor_TypeDef SrvSensorMonitor;

@@ -13,7 +13,6 @@ extern "C" {
 #include "semphr.h"
 #include "Bsp_USB.h"
 #include "Bsp_Uart.h"
-#include "shell_port.h"
 
 #define FrameCTL_Port_Tx_TimeOut 5      /* unit: ms */
 #define FrameCTL_MAX_Period 5           /* unit: ms */

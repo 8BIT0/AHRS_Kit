@@ -6,7 +6,6 @@
 #include "Dev_Led.h"
 #include "Srv_ComProto.h"
 #include "Srv_OsCommon.h"
-#include "shell_port.h"
 #include "cmsis_os.h"
 
 #define TaskSample_Period_Def    1  /* unit: ms period 1ms  1000Hz */

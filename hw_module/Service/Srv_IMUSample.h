@@ -23,7 +23,7 @@ extern "C" {
 
 #define GYR_STATIC_CALIB_CYCLE 100
 
-#define IMU_DATA_SIZE sizeof(SrvIMU_Data_TypeDef)
+#define IMU_DATA_SIZE sizeof(SrvIMUData_TypeDef)
 
 typedef union
 {
@@ -42,7 +42,6 @@ typedef enum
 {
     SrvIMU_PriModule = 1,
     SrvIMU_SecModule,
-    SrvIMU_FusModule,
 } SrvIMU_Module_Type;
 
 typedef enum
@@ -111,7 +110,6 @@ typedef struct
 typedef struct
 {
     uint32_t time_stamp;
-    uint32_t cycle_cnt;
 
     SrvIMU_Module_Type module;
     
@@ -124,37 +122,13 @@ typedef struct
 
     float acc_scale;
     float gyr_scale;
-    uint16_t chk_sum;
-} SrvIMU_Data_TypeDef;
-
-typedef union
-{
-    uint8_t buff[sizeof(SrvIMU_Data_TypeDef)];
-    SrvIMU_Data_TypeDef data;
-} SrvIMU_UnionData_TypeDef;
-
-typedef struct
-{
-    GenCalib_State_TypeList state;
-    uint16_t calib_cycle;
-    uint16_t cur_cycle;
-
-    float max[Axis_Sum];
-    float min[Axis_Sum];
-    float avg[Axis_Sum];
-
-    float z_offset[Axis_Sum];
-}SrvIMU_CalibMonitor_TypeDef;
+} SrvIMUData_TypeDef;
 
 typedef struct
 {
     SrvIMU_ErrorCode_List (*init)(void);
     bool (*sample)(SrvIMU_SampleMode_List mode);
-    bool (*get_data)(SrvIMU_Module_Type type, SrvIMU_Data_TypeDef *data);
-    bool (*get_range)(SrvIMU_Module_Type type, SrvIMU_Range_TypeDef *range);
-    float (*get_max_angular_speed_diff)(void);
-    bool (*get_type)(SrvIMU_Module_Type module, SrvIMU_SensorID_List *type);
-    void (*error_proc)(void);
+    bool (*get_data)(SrvIMU_Module_Type type, SrvIMUData_TypeDef *data);
 } SrvIMU_TypeDef;
 
 extern SrvIMU_TypeDef SrvIMU;
