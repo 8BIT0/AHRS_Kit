@@ -20,6 +20,7 @@ static SrvSensorMonitorObj_TypeDef SensorMonitor;
 /* internal function */
 static void TaskInertical_Blink_Notification(uint16_t duration);
 static void USBPort_Init(void);
+static bool USBPort_Trans(uint8_t *p_data, uint16_t size);
 static void USBPort_TxCplt_Callback(uint32_t obj_addr, uint8_t *p_data, uint32_t *size);
 static void USBPort_Connect_Callback(uint32_t Obj_addr, uint32_t *time_stamp);
 
@@ -39,7 +40,7 @@ void TaskSample_Init(uint32_t period)
     sample_enable = SrvSensorMonitor.init(&SensorMonitor);
 
     /* force make sensor sample task run as 1khz freq */
-    TaskSample_Period = 1;
+    TaskSample_Period = period;
 
     /* usb port init */
     USBPort_Init();
@@ -48,7 +49,16 @@ void TaskSample_Init(uint32_t period)
 void TaskSample_Core(void const *arg)
 {
     uint32_t sys_time = SrvOsCommon.get_os_ms();
-    
+    uint8_t trans_buff[512] = {0};
+    SrvSensorData_TypeDef sensor_data;
+    uint16_t frame_size = 0;
+    mavlink_message_t msg;
+
+    int16_t ax, ay, az = 0;
+    int16_t gx, gy, gz = 0;
+    int16_t mx, my, mz = 0;
+
+    memset(&msg, 0, sizeof(mavlink_message_t));
     while(1)
     {
         TaskInertical_Blink_Notification(100);
@@ -56,7 +66,22 @@ void TaskSample_Core(void const *arg)
         if (sample_enable)
             SrvSensorMonitor.sample_ctl(&SensorMonitor);
 
-        SrvSensorMonitor.get_data(SensorMonitor);
+        sensor_data = SrvSensorMonitor.get_data(SensorMonitor);
+        ax = (int16_t)(sensor_data.acc[Axis_X] * 100);
+        ay = (int16_t)(sensor_data.acc[Axis_Y] * 100);
+        az = (int16_t)(sensor_data.acc[Axis_Z] * 100);
+
+        gx = (int16_t)(sensor_data.gyr[Axis_X] * 100);
+        gy = (int16_t)(sensor_data.gyr[Axis_Y] * 100);
+        gz = (int16_t)(sensor_data.gyr[Axis_Z] * 100);
+
+        mx = (int16_t)(sensor_data.mag[Axis_X] * 100);
+        my = (int16_t)(sensor_data.mag[Axis_Y] * 100);
+        mz = (int16_t)(sensor_data.mag[Axis_Z] * 100);
+        /* pack mavlink frame */
+        mavlink_msg_scaled_imu_pack_chan(1, 1, 0, &msg, sensor_data.imu_time, ax, ay, az, gx, gy, gz, mx, my, mz);
+        frame_size = mavlink_msg_to_send_buffer(trans_buff, &msg);
+        USBPort_Trans(trans_buff, frame_size);
         SrvOsCommon.precise_delay(&sys_time, TaskSample_Period);
     }
 }
@@ -131,6 +156,3 @@ static void USBPort_Connect_Callback(uint32_t Obj_addr, uint32_t *time_stamp)
     if (!port_attach)
         port_attach = true;
 }
-
-
-//  mavlink_msg_scaled_imu_pack_chan

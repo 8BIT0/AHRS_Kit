@@ -31,8 +31,7 @@ typedef union
     {
         uint8_t Pri_State : 2;
         uint8_t Sec_State : 2;
-        uint8_t Fus_State : 2;
-        uint8_t res       : 2;
+        uint8_t res       : 4;
     } sec;
 
     uint8_t val;

@@ -84,7 +84,7 @@ typedef struct
     uint32_t baro_time;
 
     float acc[Axis_Sum];
-    float gyro[Axis_Sum];
+    float gyr[Axis_Sum];
     float mag[Axis_Sum];
     float baro;
     float baro_temp;

@@ -48,9 +48,6 @@ typedef struct
     SrvIMU_GetError_Callback get_error;
 }SrvIMU_InuseSensorObj_TypeDef;
 
-static uint32_t SrvIMU_Reupdate_Statistics_CNT = 0;
-
-
 /* internal variable */
 /* MPU6000 Instance */
 static SPI_HandleTypeDef PriIMU_Bus_Instance;
@@ -637,9 +634,6 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
     if(mode > SrvIMU_Priori_Sec)
         return false;
 
-    /* lock fus data */
-    SrvMpu_Update_Reg.sec.Fus_State = true;
-
     /* pri imu init successed */
     if (SrvMpu_Init_Reg.sec.Pri_State & PriSample_Enable)
     {
@@ -650,7 +644,6 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
         {
             /* lock */
             SrvMpu_Update_Reg.sec.Pri_State = true;
-
             PriIMU_Data.time_stamp = InUse_PriIMU_Obj.OriData_ptr->time_stamp;
 
             /* check Primary IMU module Sample is correct or not */
@@ -669,22 +662,15 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
                 }
 
                 PriIMU_Dir_Tune(PriIMU_Data.org_gyr, PriIMU_Data.org_acc);
-                 
-                /* unlock */
-                SrvMpu_Update_Reg.sec.Pri_State = false;
-                IMU_Data_Lst = PriIMU_Data;
             }
+            /* unlock */
+            SrvMpu_Update_Reg.sec.Pri_State = false;
         }
         else
-        {
             SrvIMU_PriSample_Undrdy(NULL, 0);
-            pri_sample_state = false;
-        }
 
         PriSample_Rt_Lst = PriIMU_Data.time_stamp;
     }
-    else
-        pri_sample_state = false;
 
     /* sec imu init successed */
     if (SrvMpu_Init_Reg.sec.Sec_State & SecSample_Enable)
@@ -716,20 +702,18 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
 
                 SecIMU_Dir_Tune(SecIMU_Data.org_gyr, SecIMU_Data.org_acc);
                 
-                /* unlock */
-                SrvMpu_Update_Reg.sec.Sec_State = false;
             }
+
+            /* unlock */
+            SrvMpu_Update_Reg.sec.Sec_State = false;
         }
         else
         {
             SrvIMU_SecSample_Undrdy(NULL, 0);
-            sec_sample_state = false;
         }
 
         SecSample_Rt_Lst = SecIMU_Data.time_stamp;
     }
-    else
-        sec_sample_state = false;
     
     IMU_Data = IMU_Data_Lst;
     switch(mode)
@@ -747,48 +731,25 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
         default: return false;
     }
 
-    /* unlock fus data */
-    SrvMpu_Update_Reg.sec.Fus_State = false;
     IMU_Data_Lst = IMU_Data;
-
     return (pri_sample_state | sec_sample_state);
 }
 
 static bool SrvIMU_Get_Data(SrvIMU_Module_Type type, SrvIMUData_TypeDef *data)
 {
-    SrvIMUData_TypeDef imu_data_tmp;
-
-    memset(&imu_data_tmp, 0, IMU_DATA_SIZE);
-
     if(data == NULL)
         return false;
 
-reupdate_imu:
-    if (type == SrvIMU_PriModule)
+    if ((type == SrvIMU_PriModule) && !SrvMpu_Update_Reg.sec.Pri_State)
     {
-        if (!SrvMpu_Update_Reg.sec.Pri_State)
-        {
-            memcpy(&imu_data_tmp, &PriIMU_Data, IMU_DATA_SIZE);
-        }
-        else
-            goto reupdate_imu_statistics;
+        memcpy(data, &PriIMU_Data, IMU_DATA_SIZE);
     }
-    else if (type == SrvIMU_SecModule)
+    else if ((type == SrvIMU_SecModule) && (!SrvMpu_Update_Reg.sec.Sec_State))
     {
-        if (!SrvMpu_Update_Reg.sec.Sec_State)
-        {
-            memcpy(&imu_data_tmp, &SecIMU_Data, IMU_DATA_SIZE);
-        }
-        else
-            goto reupdate_imu_statistics;
+        memcpy(data, &SecIMU_Data, IMU_DATA_SIZE);
     }
 
-    memcpy(data, &imu_data_tmp, sizeof(SrvIMUData_TypeDef));
     return true;
-
-reupdate_imu_statistics:
-    SrvIMU_Reupdate_Statistics_CNT ++;
-    goto reupdate_imu;
 }
 
 static SrvIMU_SensorID_List SrvIMU_AutoDetect(bus_trans_callback trans, cs_ctl_callback cs_ctl)

@@ -237,9 +237,9 @@ static bool SrvSensorMonitor_SampleCTL(SrvSensorMonitorObj_TypeDef *obj)
     /* set data */
     for (uint8_t i = Axis_X; i < Axis_Sum; i++)
     {
-        obj->data.acc[i]  = imu_data.org_acc[i];
-        obj->data.gyro[i] = imu_data.org_gyr[i];
-        obj->data.mag[i]  = 0.0f;
+        obj->data.acc[i] = imu_data.org_acc[i];
+        obj->data.gyr[i] = imu_data.org_gyr[i];
+        obj->data.mag[i] = 0.0f;
     }
 
     obj->data.baro = baro_data.pressure;
