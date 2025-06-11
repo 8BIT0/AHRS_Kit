@@ -55,7 +55,8 @@ void TaskSample_Core(void const *arg)
 
         if (sample_enable)
             SrvSensorMonitor.sample_ctl(&SensorMonitor);
-        
+
+        SrvSensorMonitor.get_data(SensorMonitor);
         SrvOsCommon.precise_delay(&sys_time, TaskSample_Period);
     }
 }

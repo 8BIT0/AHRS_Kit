@@ -15,15 +15,12 @@ extern "C" {
 
 typedef SrvIMU_Range_TypeDef SrvSensorMonitor_IMURange_TypeDef;
 
-#define GYRO_CALIB_CYCLE GYR_STATIC_CALIB_CYCLE
-#define BARO_CALIB_CYCLE SRVBARO_DEFAULT_CALI_CYCLE
-
 typedef enum
 {
     SrvSensorMonitor_StatisticTimer_Defualt = 0,
     SrvSensorMonitor_StatisticTimer_NoError,
     SrvSensorMonitor_StatisticTimer_Error,
-}SrvSensorMonitor_StatisticTimer_State_List;
+} SrvSensorMonitor_StatisticTimer_State_List;
 
 typedef enum
 {
@@ -32,7 +29,7 @@ typedef enum
     SrvSensorMonitor_Type_BARO,
     SrvSensorMonitor_Type_Flow,
     SrvSensotMonitor_Type_SUM,
-}SrvSensorMonitor_Type_List;
+} SrvSensorMonitor_Type_List;
 
 typedef enum
 {
@@ -46,7 +43,7 @@ typedef enum
     SrvSensorMonitor_SampleFreq_10Hz,
     SrvSensorMonitor_SampleFreq_5Hz,
     SrvSensorMonitor_SampleFreq_1Hz,
-}SrvSensorMonitor_SampleFreq_List;
+} SrvSensorMonitor_SampleFreq_List;
 
 typedef union
 {
@@ -56,11 +53,10 @@ typedef union
         uint32_t imu  : 1;
         uint32_t mag  : 1;
         uint32_t baro : 1;
-        uint32_t flow : 1;
 
-        uint32_t res  : 27;
+        uint32_t res  : 28;
     }bit;
-}SrvSensorMonitor_GenReg_TypeDef;
+} SrvSensorMonitor_GenReg_TypeDef;
 
 typedef union
 {
@@ -70,26 +66,29 @@ typedef union
         uint32_t imu  : 4;
         uint32_t mag  : 4;
         uint32_t baro : 4;
-        uint32_t flow : 4;
 
-        uint32_t res  : 16;
+        uint32_t res  : 20;
     }bit;
-}SrvSensorMonitor_SampleFreqReg_TypeDef;
+} SrvSensorMonitor_SampleFreqReg_TypeDef;
 
 typedef struct
 {
-    uint32_t start_time;
-    uint32_t nxt_sample_time;
-    uint32_t cur_sampling_overhead; /* unit: 100ns */
-    uint32_t max_sampling_overhead; /* unit: 100ns */
-    uint32_t min_sampling_overhead; /* unit: 100ns */
-    uint32_t avg_sampling_overhead; /* unit: 100ns */
-
     uint32_t sample_cnt;
     uint32_t err_cnt;
-    uint32_t detect_period;
-    uint32_t set_period;
-}SrvSensorMonitor_Statistic_TypeDef;
+} SrvSensorMonitor_Statistic_TypeDef;
+
+typedef struct
+{
+    uint32_t imu_time;
+    uint32_t mag_time;
+    uint32_t baro_time;
+
+    float acc[Axis_Sum];
+    float gyro[Axis_Sum];
+    float mag[Axis_Sum];
+    float baro;
+    float baro_temp;
+} SrvSensorData_TypeDef;
 
 /* bit field on init_state_reg set 1 represent error triggerd on */
 typedef struct
@@ -112,13 +111,16 @@ typedef struct
     uint8_t mag_type;
     uint8_t mag_bus_type;
     int8_t mag_err;
- }SrvSensorMonitorObj_TypeDef;
+
+    SrvSensorData_TypeDef data;
+} SrvSensorMonitorObj_TypeDef;
 
 typedef struct
 {
     bool (*init)(SrvSensorMonitorObj_TypeDef *obj);
     bool (*sample_ctl)(SrvSensorMonitorObj_TypeDef *obj);
-}SrvSensorMonitor_TypeDef;
+    SrvSensorData_TypeDef (*get_data)(SrvSensorMonitorObj_TypeDef obj);
+} SrvSensorMonitor_TypeDef;
 
 extern SrvSensorMonitor_TypeDef SrvSensorMonitor;
 

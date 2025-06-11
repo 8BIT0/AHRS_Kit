@@ -117,11 +117,6 @@ typedef struct
 
     float org_gyr[Axis_Sum];
     float org_acc[Axis_Sum];
-
-    float max_gyr_angular_diff;
-
-    float acc_scale;
-    float gyr_scale;
 } SrvIMUData_TypeDef;
 
 typedef struct

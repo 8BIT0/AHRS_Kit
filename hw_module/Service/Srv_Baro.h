@@ -43,8 +43,6 @@ typedef struct
     float tempra;
     float pressure;
     float pressure_alt;
-    float pressure_alt_offset;
-    uint8_t check_sum;
 }SrvBaroData_TypeDef;
 
 typedef struct
@@ -56,8 +54,6 @@ typedef struct
 
 typedef struct
 {
-    uint16_t sample_rate;   /* unit: Hz */
-    uint16_t sample_period; /* unit: Ms */
     void *sensor_obj;
     void *sensor_api;
     uint8_t init_err;
@@ -68,9 +64,6 @@ typedef struct
     SrvBaroData_TypeDef data;
     uint32_t sample_cnt;
     uint32_t sample_err_cnt;
-
-    float pressure_add_sum;
-    float alt_offset;
 }SrvBaroObj_TypeDef;
 
 typedef struct

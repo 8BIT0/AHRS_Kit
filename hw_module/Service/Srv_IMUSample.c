@@ -309,7 +309,7 @@ static SrvIMU_ErrorCode_List SrvIMU_Init(void)
     if (SecIMU_Init_State != SrvIMU_No_Error)
     {
         SrvMpu_Init_Reg.sec.Sec_State = false;
-        ErrorLog.trigger(SrvMPU_Error_Handle, SecIMU_Init_State, &InUse_SecIMU_Obj, sizeof(InUse_SecIMU_Obj));
+        ErrorLog.trigger(SrvMPU_Error_Handle, SecIMU_Init_State, (uint8_t *)&InUse_SecIMU_Obj, sizeof(InUse_SecIMU_Obj));
     }
 
     if (!SrvMpu_Init_Reg.sec.Pri_State && !SrvMpu_Init_Reg.sec.Sec_State)
@@ -627,8 +627,6 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
     uint8_t i = Axis_X;
     bool pri_sample_state = true;
     bool sec_sample_state = true;
-    IMUModuleScale_TypeDef pri_imu_scale;
-    IMUModuleScale_TypeDef sec_imu_scale;
     static uint32_t SecSample_Rt_Lst = 0;
     bool PriSample_Enable = mode & SrvIMU_Priori_Pri;
     bool SecSample_Enable = mode & SrvIMU_Priori_Sec;
@@ -645,10 +643,7 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
     /* pri imu init successed */
     if (SrvMpu_Init_Reg.sec.Pri_State & PriSample_Enable)
     {
-        pri_imu_scale = InUse_PriIMU_Obj.get_scale(InUse_PriIMU_Obj.obj_ptr);
         PriIMU_Data.module = SrvIMU_PriModule;
-        PriIMU_Data.acc_scale = pri_imu_scale.acc_scale;
-        PriIMU_Data.gyr_scale = pri_imu_scale.gyr_scale;
 
         /* pri imu module data ready triggered */
         if (InUse_PriIMU_Obj.get_drdy(InUse_PriIMU_Obj.obj_ptr) && InUse_PriIMU_Obj.sample(InUse_PriIMU_Obj.obj_ptr))
@@ -659,11 +654,8 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
             PriIMU_Data.time_stamp = InUse_PriIMU_Obj.OriData_ptr->time_stamp;
 
             /* check Primary IMU module Sample is correct or not */
-            if (PriSample_Rt_Lst)
-            {
-                if (PriIMU_Data.time_stamp <= PriSample_Rt_Lst)
-                    pri_sample_state = false;
-            }
+            if (PriSample_Rt_Lst && (PriIMU_Data.time_stamp <= PriSample_Rt_Lst))
+                pri_sample_state = false;
 
             if (pri_sample_state)
             {
@@ -697,10 +689,7 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
     /* sec imu init successed */
     if (SrvMpu_Init_Reg.sec.Sec_State & SecSample_Enable)
     {
-        sec_imu_scale = InUse_SecIMU_Obj.get_scale(InUse_SecIMU_Obj.obj_ptr);
         SecIMU_Data.module = SrvIMU_SecModule;
-        SecIMU_Data.acc_scale = sec_imu_scale.acc_scale;
-        SecIMU_Data.gyr_scale = sec_imu_scale.gyr_scale;
 
         /* sec imu module data ready triggered */
         if (InUse_SecIMU_Obj.get_drdy(InUse_SecIMU_Obj.obj_ptr) && InUse_SecIMU_Obj.sample(InUse_SecIMU_Obj.obj_ptr))
@@ -711,11 +700,8 @@ static bool SrvIMU_Sample(SrvIMU_SampleMode_List mode)
             SecIMU_Data.time_stamp = InUse_SecIMU_Obj.OriData_ptr->time_stamp;
 
             /* check Secondry IMU module Sample is correct or not */
-            if (SecSample_Rt_Lst)
-            {
-                if (SecIMU_Data.time_stamp <= SecSample_Rt_Lst)
-                    sec_sample_state = false;
-            }
+            if (SecSample_Rt_Lst && (SecIMU_Data.time_stamp <= SecSample_Rt_Lst))
+                sec_sample_state = false;
 
             if (sec_sample_state)
             {
