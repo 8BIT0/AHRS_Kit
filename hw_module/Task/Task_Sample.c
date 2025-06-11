@@ -14,12 +14,14 @@
 static osSemaphoreId USBTx_Sem = NULL;
 static uint32_t TaskSample_Period = 0;
 static bool sample_enable = false;
+static bool port_attach = false;
 static SrvSensorMonitorObj_TypeDef SensorMonitor;
 
 /* internal function */
 static void TaskInertical_Blink_Notification(uint16_t duration);
 static void USBPort_Init(void);
 static void USBPort_TxCplt_Callback(uint32_t obj_addr, uint8_t *p_data, uint32_t *size);
+static void USBPort_Connect_Callback(uint32_t Obj_addr, uint32_t *time_stamp);
 
 /* external function */
 
@@ -40,6 +42,7 @@ void TaskSample_Init(uint32_t period)
     TaskSample_Period = 1;
 
     /* usb port init */
+    USBPort_Init();
 }
 
 void TaskSample_Core(void const *arg)
@@ -86,8 +89,8 @@ static void USBPort_Init(void)
         return;
 
     BspUSB_VCP.set_tx_cpl_callback(USBPort_TxCplt_Callback);
-    BspUSB_VCP.set_rx_callback();
-    BspUSB_VCP.set_connect_callback();
+    BspUSB_VCP.set_rx_callback(NULL);
+    BspUSB_VCP.set_connect_callback(USBPort_Connect_Callback);
 }
 
 static void USBPort_TxCplt_Callback(uint32_t obj_addr, uint8_t *p_data, uint32_t *size)
@@ -95,52 +98,38 @@ static void USBPort_TxCplt_Callback(uint32_t obj_addr, uint8_t *p_data, uint32_t
     UNUSED(p_data);
     UNUSED(size);
 
-    if (obj_addr == NULL)
+    if (obj_addr == 0)
         return;
     
     osSemaphoreId semID = (osSemaphoreId)obj_addr;
     osSemaphoreRelease(semID);
 }
 
-/************* bug *****************/
-static void TaskFrameCTL_Port_Rx_Callback(uint32_t RecObj_addr, uint8_t *p_data, uint16_t size)
+static bool USBPort_Trans(uint8_t *p_data, uint16_t size)
 {
-    SrvComProto_Stream_TypeDef *p_stream = NULL;
-    FrameCTL_PortProtoObj_TypeDef *p_RecObj = NULL;
+    bool state = false;
 
-    /* use mavlink protocol tuning the flight parameter */
-    if(p_data && size && RecObj_addr)
+    /* when attach to host device then send data */
+    if (USBTx_Sem && p_data && size)
     {
-        p_RecObj = (FrameCTL_PortProtoObj_TypeDef *)RecObj_addr;
-        p_RecObj->time_stamp = SrvOsCommon.get_os_ms();
-
-        p_stream = &USBRx_Stream;
-        TaskFrameCTL_DefaultPort_Trans(p_data, size);
-
-        if ((p_stream->size + size) <= p_stream->max_size)
-        {
-            memcpy(p_stream->p_buf + p_stream->size, p_data, size);
-            p_stream->size += size;
-        }
-        else
-        {
-            memset(p_stream->p_buf, 0, p_stream->size);
-            p_stream->size = 0;
-            return;
-        }
+        state = true;
+        osSemaphoreWait(USBTx_Sem, 0);
+        if ((BspUSB_VCP.send(p_data, size) != BspUSB_Error_None) || \
+            (osSemaphoreWait(USBTx_Sem, 100) != osOK))
+            state = false;
     }
+
+    return state;
 }
 
-static void TaskFrameCTL_USB_VCP_Connect_Callback(uint32_t Obj_addr, uint32_t *time_stamp)
+static void USBPort_Connect_Callback(uint32_t Obj_addr, uint32_t *time_stamp)
 {
-    FrameCTL_PortProtoObj_TypeDef *p_Obj = NULL;
+    UNUSED(Obj_addr);
+    UNUSED(time_stamp);
 
-    if (Obj_addr)
-    {
-        p_Obj = (FrameCTL_PortProtoObj_TypeDef *)Obj_addr;
-
-        if (p_Obj->PortObj_addr && (p_Obj->type == Port_USB))
-            *time_stamp = SrvOsCommon.get_os_ms();
-    }
+    if (!port_attach)
+        port_attach = true;
 }
 
+
+//  mavlink_msg_scaled_imu_pack_chan

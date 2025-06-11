@@ -43,7 +43,6 @@ debug/debug_util.c \
 debug/trace_analysiser.c \
 Task/Task_Sample.c \
 Task/Task_Manager.c \
-Task/Task_Protocol.c \
 Device/Dev_DPS310.c \
 Device/Dev_BMP280.c \
 Device/Dev_MPU6000.c \
@@ -52,7 +51,6 @@ Device/Dev_ICM426xx.c \
 Device/Dev_Led.c \
 Service/Srv_IMUSample.c \
 Service/Srv_Baro.c \
-Service/Srv_ComProto.c \
 Service/Srv_OsCommon.c \
 Service/Srv_SensorMonitor.c \
 DataStructure/Data_Convert_Util.c \

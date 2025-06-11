@@ -1,10 +1,8 @@
 #include "Task_Manager.h"
 #include "Task_Sample.h"
-#include "Task_Protocol.h"
 #include "debug_util.h"
 #include "HW_Def.h"
 #include "Dev_Led.h"
-#include "Srv_ComProto.h"
 #include "Srv_OsCommon.h"
 #include "cmsis_os.h"
 
@@ -15,12 +13,7 @@
 #define TaslNavi_Period_Def      10 /* unit: ms period 10ms 100Hz  */
 #define TaskFrameCTL_Period_Def  5  /* unit: ms period 5ms  200Hz  */
 
-osThreadId TaskInertial_Handle = NULL;
-osThreadId TaskControl_Handle = NULL;
-osThreadId TaskNavi_Handle = NULL;
-osThreadId TaskLog_Handle = NULL;
-osThreadId TaskTelemetry_Handle = NULL;
-osThreadId TaskFrameCTL_Handle = NULL;
+osThreadId TaskSample_Handle = NULL;
 osThreadId TaskManager_Handle = NULL;
 
 #define SYS_TAG "[ HARDWARE INFO ] "
@@ -72,15 +65,10 @@ void Task_Manager_CreateTask(void const *arg)
             DEBUG_INFO("Sys Start\r\n");
             DEBUG_INFO("Sys Time: %d\r\n", sys_time);
 
-            SrvComProto.init(SrvComProto_Type_MAV, NULL);
-            
             TaskSample_Init(TaskSample_Period_Def);
 
             osThreadDef(SampleTask, TaskSample_Core, osPriorityRealtime, 0, 1024);
-            TaskInertial_Handle = osThreadCreate(osThread(SampleTask), NULL);
-
-            osThreadDef(FrameCTLTask, TaskFrameCTL_Core, osPriorityNormal, 0, 1024);
-            TaskFrameCTL_Handle = osThreadCreate(osThread(FrameCTLTask), NULL);
+            TaskSample_Handle = osThreadCreate(osThread(SampleTask), NULL);
 
             init = true;
         }
