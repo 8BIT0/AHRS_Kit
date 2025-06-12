@@ -18,33 +18,11 @@ typedef SrvIMU_Range_TypeDef SrvSensorMonitor_IMURange_TypeDef;
 
 typedef enum
 {
-    SrvSensorMonitor_StatisticTimer_Defualt = 0,
-    SrvSensorMonitor_StatisticTimer_NoError,
-    SrvSensorMonitor_StatisticTimer_Error,
-} SrvSensorMonitor_StatisticTimer_State_List;
-
-typedef enum
-{
     SrvSensorMonitor_Type_IMU = 0,
     SrvSensorMonitor_Type_MAG,
     SrvSensorMonitor_Type_BARO,
-    SrvSensorMonitor_Type_Flow,
     SrvSensotMonitor_Type_SUM,
 } SrvSensorMonitor_Type_List;
-
-typedef enum
-{
-    SrvSensorMonitor_SampleFreq_1KHz = 0,
-    SrvSensorMonitor_SampleFreq_500Hz,
-    SrvSensorMonitor_SampleFreq_250Hz,
-    SrvSensorMonitor_SampleFreq_200Hz,
-    SrvSensorMonitor_SampleFreq_100Hz,
-    SrvSensorMonitor_SampleFreq_50Hz,
-    SrvSensorMonitor_SampleFreq_20Hz,
-    SrvSensorMonitor_SampleFreq_10Hz,
-    SrvSensorMonitor_SampleFreq_5Hz,
-    SrvSensorMonitor_SampleFreq_1Hz,
-} SrvSensorMonitor_SampleFreq_List;
 
 typedef union
 {
@@ -58,19 +36,6 @@ typedef union
         uint32_t res  : 28;
     }bit;
 } SrvSensorMonitor_GenReg_TypeDef;
-
-typedef union
-{
-    uint32_t val;
-    struct
-    {
-        uint32_t imu  : 4;
-        uint32_t mag  : 4;
-        uint32_t baro : 4;
-
-        uint32_t res  : 20;
-    }bit;
-} SrvSensorMonitor_SampleFreqReg_TypeDef;
 
 typedef struct
 {
@@ -95,7 +60,6 @@ typedef struct
 typedef struct
 {
     SrvSensorMonitor_GenReg_TypeDef init_state_reg;     /* pipe thie vriable to datahub after srv_sensormonitor init */
-    SrvSensorMonitor_SampleFreqReg_TypeDef freq_reg;
 
     SrvSensorMonitor_Statistic_TypeDef *statistic_imu;
     SrvSensorMonitor_Statistic_TypeDef *statistic_mag;

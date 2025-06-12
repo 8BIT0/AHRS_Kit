@@ -35,8 +35,6 @@ void TaskSample_Init(uint32_t period)
     memset(&SecIMU_Range, 0, sizeof(SrvSensorMonitor_IMURange_TypeDef));
     memset(&SensorMonitor, 0, sizeof(SrvSensorMonitorObj_TypeDef));
     
-    SensorMonitor.freq_reg.bit.imu = SrvSensorMonitor_SampleFreq_1KHz;
-    SensorMonitor.freq_reg.bit.baro = SrvSensorMonitor_SampleFreq_50Hz;
     sample_enable = SrvSensorMonitor.init(&SensorMonitor);
 
     /* force make sensor sample task run as 1khz freq */

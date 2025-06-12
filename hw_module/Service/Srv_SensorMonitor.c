@@ -101,15 +101,14 @@ static bool SrvSensorMonitor_IMU_SampleCTL(SrvSensorMonitorObj_TypeDef *obj)
 {
     bool state = false;
 
-    if (obj && obj->statistic_imu && obj->init_state_reg.bit.imu)
+    if (obj && obj->statistic_imu && \
+        obj->init_state_reg.bit.imu && \
+        SrvIMU.sample && SrvIMU.sample(obj->IMU_SampleMode))
     {
-        if (SrvIMU.sample && SrvIMU.sample(obj->IMU_SampleMode))
-        {
-            // DebugPin.ctl(Debug_PB5, true);
-            obj->statistic_imu->sample_cnt ++;
-            state = true;
-            // DebugPin.ctl(Debug_PB5, false);
-        }
+        // DebugPin.ctl(Debug_PB5, true);
+        obj->statistic_imu->sample_cnt ++;
+        state = true;
+        // DebugPin.ctl(Debug_PB5, false);
     }
 
     return state;
