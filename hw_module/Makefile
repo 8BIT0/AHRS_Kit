@@ -48,6 +48,7 @@ Device/Dev_BMP280.c \
 Device/Dev_MPU6000.c \
 Device/Dev_ICM20602.c \
 Device/Dev_ICM426xx.c \
+Device/Dev_IST8310.c \
 Device/Dev_Led.c \
 Service/Srv_IMUSample.c \
 Service/Srv_Baro.c \

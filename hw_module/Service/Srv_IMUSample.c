@@ -353,8 +353,8 @@ static SrvIMU_ErrorCode_List SrvIMU_PriIMU_Init(void)
 
             DevMPU6000.config(&MPU6000Obj,
                                MPU6000_SampleRate_1K,
-                               MPU6000_Acc_16G,
-                               MPU6000_Gyr_2000DPS);
+                               MPU6000_Acc_4G,
+                               MPU6000_Gyr_500DPS);
 
             InUse_PriIMU_Obj.obj_ptr = &MPU6000Obj;
             InUse_PriIMU_Obj.OriData_ptr = &(MPU6000Obj.OriData);
@@ -381,8 +381,8 @@ static SrvIMU_ErrorCode_List SrvIMU_PriIMU_Init(void)
 
             DevICM20602.config(&ICM20602Obj,
                                 ICM20602_SampleRate_1K,
-                                ICM20602_Acc_16G,
-                                ICM20602_Gyr_2000DPS);
+                                ICM20602_Acc_4G,
+                                ICM20602_Gyr_500DPS);
 
             InUse_PriIMU_Obj.obj_ptr = &ICM20602Obj;
             InUse_PriIMU_Obj.OriData_ptr = &(ICM20602Obj.OriData);
@@ -409,8 +409,8 @@ static SrvIMU_ErrorCode_List SrvIMU_PriIMU_Init(void)
 
             DevICM426xx.config(&ICM42688PObj,
                                 ICM426xx_SampleRate_1K,
-                                ICM426xx_Acc_16G,
-                                ICM426xx_Gyr_2000DPS);
+                                ICM426xx_Acc_4G,
+                                ICM426xx_Gyr_500DPS);
 
             InUse_PriIMU_Obj.obj_ptr = &ICM42688PObj;
             InUse_PriIMU_Obj.OriData_ptr = &(ICM42688PObj.OriData);
@@ -437,8 +437,8 @@ static SrvIMU_ErrorCode_List SrvIMU_PriIMU_Init(void)
 
             DevICM426xx.config(&ICM42605Obj,
                                 ICM426xx_SampleRate_1K,
-                                ICM426xx_Acc_16G,
-                                ICM426xx_Gyr_2000DPS);
+                                ICM426xx_Acc_4G,
+                                ICM426xx_Gyr_500DPS);
 
             InUse_PriIMU_Obj.obj_ptr = &ICM42605Obj;
             InUse_PriIMU_Obj.OriData_ptr = &(ICM42605Obj.OriData);
@@ -499,8 +499,8 @@ static SrvIMU_ErrorCode_List SrvIMU_SecIMU_Init(void)
 
             DevMPU6000.config(&MPU6000Obj,
                                MPU6000_SampleRate_1K,
-                               MPU6000_Acc_16G,
-                               MPU6000_Gyr_2000DPS);
+                               MPU6000_Acc_4G,
+                               MPU6000_Gyr_500DPS);
 
             InUse_SecIMU_Obj.obj_ptr = &MPU6000Obj;
             InUse_SecIMU_Obj.OriData_ptr = &(MPU6000Obj.OriData);
@@ -527,8 +527,8 @@ static SrvIMU_ErrorCode_List SrvIMU_SecIMU_Init(void)
 
             DevICM20602.config(&ICM20602Obj,
                                 ICM20602_SampleRate_1K,
-                                ICM20602_Acc_16G,
-                                ICM20602_Gyr_2000DPS);
+                                ICM20602_Acc_4G,
+                                ICM20602_Gyr_500DPS);
 
             InUse_SecIMU_Obj.obj_ptr = &ICM20602Obj;
             InUse_SecIMU_Obj.OriData_ptr = &(ICM20602Obj.OriData);
@@ -555,8 +555,8 @@ static SrvIMU_ErrorCode_List SrvIMU_SecIMU_Init(void)
 
             DevICM426xx.config(&ICM42688PObj,
                                 ICM426xx_SampleRate_1K,
-                                ICM426xx_Acc_16G,
-                                ICM426xx_Gyr_2000DPS);
+                                ICM426xx_Acc_4G,
+                                ICM426xx_Gyr_500DPS);
 
             InUse_SecIMU_Obj.obj_ptr = &ICM42688PObj;
             InUse_SecIMU_Obj.OriData_ptr = &(ICM42688PObj.OriData);
@@ -583,8 +583,8 @@ static SrvIMU_ErrorCode_List SrvIMU_SecIMU_Init(void)
 
             DevICM426xx.config(&ICM42605Obj,
                                 ICM426xx_SampleRate_1K,
-                                ICM426xx_Acc_16G,
-                                ICM426xx_Gyr_2000DPS);
+                                ICM426xx_Acc_4G,
+                                ICM426xx_Gyr_500DPS);
 
             InUse_SecIMU_Obj.obj_ptr = &ICM42605Obj;
             InUse_SecIMU_Obj.OriData_ptr = &(ICM42605Obj.OriData);
