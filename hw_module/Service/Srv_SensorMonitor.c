@@ -1,5 +1,4 @@
 #include "Srv_SensorMonitor.h"
-#include "Bsp_Timer.h"
 #include "Srv_OsCommon.h"
 #include "debug_util.h"
 #include "HW_Def.h"
@@ -11,7 +10,7 @@
 
 /* internal function */
 static bool SrvSensorMonitor_IMU_Init(SrvSensorMonitorObj_TypeDef *obj);
-static bool SrvSensorMonitor_Mag_Init(void);
+static bool SrvSensorMonitor_Mag_Init(SrvSensorMonitorObj_TypeDef *obj);
 static bool SrvSensorMonitor_Baro_Init(SrvSensorMonitorObj_TypeDef *obj);
 static SrvIMUData_TypeDef SrvSensorMonitor_Get_IMUData(SrvSensorMonitorObj_TypeDef *obj);
 static SrvBaroData_TypeDef SrvSensorMonitor_Get_BaroData(SrvSensorMonitorObj_TypeDef *obj);
@@ -55,7 +54,7 @@ static bool SrvSensorMonitor_Init(SrvSensorMonitorObj_TypeDef *obj)
     }
 
     obj->init_state_reg.bit.mag = false;
-    if (SrvSensorMonitor_Mag_Init())
+    if (SrvSensorMonitor_Mag_Init(obj))
     {
         if (list_index > 3)
             return false;
@@ -137,17 +136,18 @@ static SrvIMUData_TypeDef SrvSensorMonitor_Get_IMUData(SrvSensorMonitorObj_TypeD
 
 /******************************************* Mag Section **********************************************/
 /* still in developing */
-static bool SrvSensorMonitor_Mag_Init(void)
+static bool SrvSensorMonitor_Mag_Init(SrvSensorMonitorObj_TypeDef *obj)
 {
-    return false;
+    if ((obj == NULL) || (SrvMag.init == NULL) || !SrvMag.init())
+        return false;
+
+    return true;
 }
 
 static bool SrvSensorMonitor_Mag_SampleCTL(SrvSensorMonitorObj_TypeDef *obj)
 {
-    if (obj && obj->init_state_reg.bit.mag)
-    {
-        
-    }
+    if ((obj == NULL) || !obj->init_state_reg.bit.mag)
+        return false;
 
     return false;
 }
@@ -166,7 +166,7 @@ static bool SrvSensorMonitor_Baro_Init(SrvSensorMonitorObj_TypeDef *obj)
     obj->baro_err = SrvBaro.init();
     if (obj->baro_err == SrvBaro_Error_None)
         return true;
-    
+
     return false;
 }
 

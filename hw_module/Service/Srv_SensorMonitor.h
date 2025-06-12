@@ -73,8 +73,6 @@ typedef struct
     int8_t baro_err;
     SrvBaroData_TypeDef lst_baro_data;
 
-    uint8_t mag_type;
-    uint8_t mag_bus_type;
     int8_t mag_err;
 
     SrvSensorData_TypeDef data;

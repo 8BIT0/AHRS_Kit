@@ -41,6 +41,8 @@ typedef struct
     bool (*init)(void);
 } SrvMag_TypeDef;
 
+extern SrvMag_TypeDef SrvMag;
+
 #ifdef __cplusplus
 }
 #endif
