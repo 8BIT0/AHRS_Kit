@@ -12,6 +12,7 @@ extern "C" {
 #include "Bsp_Timer.h"
 #include "Srv_IMUSample.h"
 #include "Srv_Baro.h"
+#include "Srv_Mag.h"
 
 typedef SrvIMU_Range_TypeDef SrvSensorMonitor_IMURange_TypeDef;
 

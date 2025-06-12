@@ -10,6 +10,11 @@ extern "C" {
 #include <string.h>
 #include "mag_data.h"
 
+#define ToIST8310_API(x) ((DevIST8310_TypeDef *)x)
+#define ToIST8310_OBJ(x) ((DevIST8310Obj_TypeDef *)x)
+
+#define IST8310_DataSize sizeof(MagData_TypeDef)
+
 typedef bool (*IST8310_Bus_Read)(void *bus_obj, uint8_t dev_addr, uint8_t reg, uint8_t *p_data, uint16_t len);
 typedef bool (*IST8310_Bus_Write)(void *bus_obj, uint8_t dev_addr, uint8_t reg, uint8_t *p_data, uint16_t len);
 typedef uint32_t (*IST8310_Get_Tick)(void);

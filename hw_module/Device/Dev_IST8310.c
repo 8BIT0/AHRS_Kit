@@ -20,11 +20,11 @@ static bool DevIST8310_Sample(DevIST8310Obj_TypeDef *obj);
 static bool DevIST8310_GetData(DevIST8310Obj_TypeDef *obj, MagData_TypeDef *p_data);
 
 DevIST8310_TypeDef DevIST8310 = {
-    .init       = DevIST8310_Init,
-    .sample     = DevIST8310_Sample,
-    .reset      = DevIST8310_SoftReset,
-    .set_drdy   = DevIST8310_Set_Drdy,
-    .get        = DevIST8310_GetData,
+    .init     = DevIST8310_Init,
+    .sample   = DevIST8310_Sample,
+    .reset    = DevIST8310_SoftReset,
+    .set_drdy = DevIST8310_Set_Drdy,
+    .get      = DevIST8310_GetData,
 };
 
 static bool DevIST8310_Init(DevIST8310Obj_TypeDef *obj)

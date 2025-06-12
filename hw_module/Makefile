@@ -52,6 +52,7 @@ Device/Dev_IST8310.c \
 Device/Dev_Led.c \
 Service/Srv_IMUSample.c \
 Service/Srv_Baro.c \
+Service/Srv_Mag.c \
 Service/Srv_OsCommon.c \
 Service/Srv_SensorMonitor.c \
 DataStructure/Data_Convert_Util.c \

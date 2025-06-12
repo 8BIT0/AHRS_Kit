@@ -47,44 +47,8 @@ static Error_Obj_Typedef SrvBaro_ErrorList[] = {
         .out = true,
         .log = false,
         .prc_callback = SrvBaro_BusInitError,
-        .code = SrvBaro_Error_BadRate,
-        .desc = "SrvBaro Bad Sample Rate\r\n",
-        .proc_type = Error_Proc_Ignore,
-        .prc_data_stream = {
-            .p_data = NULL,
-            .size = 0,
-        },
-    },
-    {
-        .out = true,
-        .log = false,
-        .prc_callback = SrvBaro_BusInitError,
-        .code = SrvBaro_Error_BadType,
-        .desc = "SrvBaro Bad Sensor Type\r\n",
-        .proc_type = Error_Proc_Ignore,
-        .prc_data_stream = {
-            .p_data = NULL,
-            .size = 0,
-        },
-    },
-    {
-        .out = true,
-        .log = false,
-        .prc_callback = SrvBaro_BusInitError,
         .code = SrvBaro_Error_BadSensorObj,
         .desc = "SrvBaro Bad Sensor Object\r\n",
-        .proc_type = Error_Proc_Ignore,
-        .prc_data_stream = {
-            .p_data = NULL,
-            .size = 0,
-        },
-    },
-    {
-        .out = true,
-        .log = false,
-        .prc_callback = SrvBaro_BusInitError,
-        .code = SrvBaro_Error_BadSamplePeriod,
-        .desc = "SrvBaro Bad Sample Period\r\n",
         .proc_type = Error_Proc_Ignore,
         .prc_data_stream = {
             .p_data = NULL,
@@ -98,18 +62,6 @@ static Error_Obj_Typedef SrvBaro_ErrorList[] = {
         .code = SrvBaro_Error_BusInit,
         .desc = "SrvBaro Bus Init Failed\r\n",
         .proc_type = Error_Proc_Ignore,
-        .prc_data_stream = {
-            .p_data = NULL,
-            .size = 0,
-        },
-    },
-    {
-        .out = true,
-        .log = false,
-        .prc_callback = SrvBaro_BusInitError,
-        .code = SrvBaro_Error_FilterInit,
-        .desc = "SrvBaro Sensor Filter Init Failed\r\n",
-        .proc_type = Error_Proc_Immd, 
         .prc_data_stream = {
             .p_data = NULL,
             .size = 0,
@@ -156,15 +108,13 @@ static bool SrvBaro_BusInit(void)
     }
 
     ToIIC_BusObj(SrvBaroBus.bus_obj)->PeriphClkInitStruct = SrvOsCommon.malloc(I2C_PeriphCLKInitType_Size);
-    if (ToIIC_BusObj(SrvBaroBus.bus_obj)->PeriphClkInitStruct == NULL)
+    if ((ToIIC_BusObj(SrvBaroBus.bus_obj)->PeriphClkInitStruct == NULL) || \
+        !ToIIC_BusAPI(SrvBaroBus.bus_api)->init(ToIIC_BusObj(SrvBaroBus.bus_obj)))
     {
         SrvOsCommon.free(ToIIC_BusObj(SrvBaroBus.bus_obj)->handle);
         SrvOsCommon.free(ToIIC_BusObj(SrvBaroBus.bus_obj)->PeriphClkInitStruct);
         return false;
     }
-
-    if (!ToIIC_BusAPI(SrvBaroBus.bus_api)->init(ToIIC_BusObj(SrvBaroBus.bus_obj)))
-        return false;
 
     SrvBaroBus.init = true;
     return true;
@@ -187,30 +137,29 @@ static uint8_t SrvBaro_Init(void)
     SrvBaroObj.sensor_obj = SrvOsCommon.malloc(sizeof(DevDPS310Obj_TypeDef));
     SrvBaroObj.sensor_api = &DevDPS310;
 
-    if ((SrvBaroObj.sensor_obj != NULL) &&
-        (SrvBaroObj.sensor_api != NULL))
+    if (SrvBaroObj.sensor_obj == NULL)
     {
-        ToDPS310_OBJ(SrvBaroObj.sensor_obj)->DevAddr = DPS310_I2C_ADDR;
-        ToDPS310_OBJ(SrvBaroObj.sensor_obj)->bus_rx = (DevDPS310_BusRead)SrvBaro_IICBus_Rx;
-        ToDPS310_OBJ(SrvBaroObj.sensor_obj)->bus_tx = (DevDPS310_BusWrite)SrvBaro_IICBus_Tx;
-        ToDPS310_OBJ(SrvBaroObj.sensor_obj)->get_tick = SrvOsCommon.get_os_ms;
-        ToDPS310_OBJ(SrvBaroObj.sensor_obj)->bus_delay = SrvOsCommon.delay_ms;
-
-        /* device init */
-        if (!ToDPS310_API(SrvBaroObj.sensor_api)->init(ToDPS310_OBJ(SrvBaroObj.sensor_obj)))
-        {
-            ErrorLog.trigger(SrvBaro_Error_Handle, SrvBaro_Error_DevInit, NULL, 0);
-            return SrvBaro_Error_DevInit;
-        }
-
-        SrvBaroObj.data_size = DPS310_DataSize;
-        SrvBaroObj.sensor_data = SrvOsCommon.malloc(SrvBaroObj.data_size);
-    }
-    else
-    {
+        SrvOsCommon.free(SrvBaroObj.sensor_obj);
         ErrorLog.trigger(SrvBaro_Error_Handle, SrvBaro_Error_BadSensorObj, NULL, 0);
         return SrvBaro_Error_BadSensorObj;
     }
+
+    ToDPS310_OBJ(SrvBaroObj.sensor_obj)->DevAddr   = DPS310_I2C_ADDR;
+    ToDPS310_OBJ(SrvBaroObj.sensor_obj)->bus_rx    = (DevDPS310_BusRead)SrvBaro_IICBus_Rx;
+    ToDPS310_OBJ(SrvBaroObj.sensor_obj)->bus_tx    = (DevDPS310_BusWrite)SrvBaro_IICBus_Tx;
+    ToDPS310_OBJ(SrvBaroObj.sensor_obj)->get_tick  = SrvOsCommon.get_os_ms;
+    ToDPS310_OBJ(SrvBaroObj.sensor_obj)->bus_delay = SrvOsCommon.delay_ms;
+
+    /* device init */
+    if (!ToDPS310_API(SrvBaroObj.sensor_api)->init(ToDPS310_OBJ(SrvBaroObj.sensor_obj)))
+    {
+        SrvOsCommon.free(SrvBaroObj.sensor_obj);
+        ErrorLog.trigger(SrvBaro_Error_Handle, SrvBaro_Error_DevInit, NULL, 0);
+        return SrvBaro_Error_DevInit;
+    }
+
+    SrvBaroObj.data_size = DPS310_DataSize;
+    SrvBaroObj.sensor_data = SrvOsCommon.malloc(SrvBaroObj.data_size);
 
     return SrvBaro_Error_None;
 }
@@ -282,15 +231,9 @@ static void SrvBaro_BusInitError(int16_t code, uint8_t *p_arg, uint16_t size)
 {
     switch(code)
     {
-        case SrvBaro_Error_BadRate: break;
-        case SrvBaro_Error_BadType: break;
         case SrvBaro_Error_BadSensorObj: break;
-        case SrvBaro_Error_BadSamplePeriod: break;
         case SrvBaro_Error_BusInit: break;
         case SrvBaro_Error_DevInit: break;
-        case SrvBaro_Error_FilterInit: break;
-        default:
-            ErrorLog.add_desc("SrvBaro Triggered Unknow ErrorCode: %d\r\n", code);
-        break;
+        default: ErrorLog.add_desc("SrvBaro Triggered Unknow ErrorCode: %d\r\n", code); break;
     }
 }

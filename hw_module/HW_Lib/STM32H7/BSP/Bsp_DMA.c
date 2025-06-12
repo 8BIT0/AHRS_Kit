@@ -261,8 +261,8 @@ static bool BspDMA_Pipe_Init(BspDMA_Pipe_TransFin_Cb fin_cb, BspDMA_Pipe_TransEr
         return false;
 
     /* set transmit process callback */
-    HAL_DMA_RegisterCallback(&DataPipe_DMA, HAL_DMA_XFER_CPLT_CB_ID, fin_cb);
-    HAL_DMA_RegisterCallback(&DataPipe_DMA, HAL_DMA_XFER_ERROR_CB_ID, err_cb);
+    HAL_DMA_RegisterCallback(&DataPipe_DMA, HAL_DMA_XFER_CPLT_CB_ID, (void (*)(DMA_HandleTypeDef *))fin_cb);
+    HAL_DMA_RegisterCallback(&DataPipe_DMA, HAL_DMA_XFER_ERROR_CB_ID, (void (*)(DMA_HandleTypeDef *))err_cb);
 
     /* DMA interrupt init */
     /* DMA2_Stream7_IRQn interrupt configuration */

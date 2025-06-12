@@ -27,13 +27,9 @@ extern "C" {
 typedef enum
 {
     SrvBaro_Error_None = 0,
-    SrvBaro_Error_BadRate,
     SrvBaro_Error_BusType,
-    SrvBaro_Error_BadType,
     SrvBaro_Error_DevInit,
     SrvBaro_Error_BadSensorObj,
-    SrvBaro_Error_FilterInit,
-    SrvBaro_Error_BadSamplePeriod,
     SrvBaro_Error_BusInit,
 }SrvBaro_ErrorCodeList;
 
