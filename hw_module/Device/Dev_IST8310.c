@@ -46,7 +46,7 @@ static bool DevIST8310_Init(DevIST8310Obj_TypeDef *obj)
     /* check device id */
     for (uint8_t i = 0; i < IST8310_ADDRESS_SUM; i++)
     {
-        obj->dev_addr = (uint8_t)(IST8310_Address_List[i] << 1);
+        obj->dev_addr = (uint8_t)IST8310_Address_List[i] << 1;
         DevIST8310_Get_ID(obj);
         if (obj->id == IST8310_DEV_ID)
             break;    

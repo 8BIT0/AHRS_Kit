@@ -16,8 +16,6 @@ SrvMagObj_TypeDef SrvMagObj = {
 };
 
 /* internal function */
-static bool SrvMag_IICBus_Tx(uint16_t dev_addr, uint16_t reg_addr, uint8_t *p_data, uint8_t len);
-static bool SrvMag_IICBus_Rx(uint16_t dev_addr, uint16_t reg_addr, uint8_t *p_data, uint8_t len);
 
 /* external funtion */
 static bool SrvMag_Init(void);
@@ -63,19 +61,19 @@ static bool SrvMag_Init(void)
     SrvMagObj.obj = SrvOsCommon.malloc(sizeof(DevIST8310Obj_TypeDef));
     SrvMagObj.api = &DevIST8310;
 
-    SrvMagObj.sensor_data = SrvOsCommon.malloc(IST8310_DataSize);
+    SrvMagObj.p_sensor_data = SrvOsCommon.malloc(IST8310_DataSize);
     SrvMagObj.data_size = IST8310_DataSize;
 
-    if ((SrvMagObj.obj == NULL) || (SrvMagObj.sensor_data == NULL))
+    if ((SrvMagObj.obj == NULL) || (SrvMagObj.p_sensor_data == NULL))
     {
         SrvOsCommon.free(SrvMagObj.obj);
-        SrvOsCommon.free(SrvMagObj.sensor_data);
+        SrvOsCommon.free(SrvMagObj.p_sensor_data);
         return false;
     }
 
     ToIST8310_OBJ(SrvMagObj.obj)->bus_obj   = SrvMagBus.obj;
-    ToIST8310_OBJ(SrvMagObj.obj)->bus_read  = (IST8310_Bus_Read)SrvMag_IICBus_Rx;
-    ToIST8310_OBJ(SrvMagObj.obj)->bus_write = (IST8310_Bus_Write)SrvMag_IICBus_Tx;
+    ToIST8310_OBJ(SrvMagObj.obj)->bus_read  = (IST8310_Bus_Read)BspIIC.read;
+    ToIST8310_OBJ(SrvMagObj.obj)->bus_write = (IST8310_Bus_Write)BspIIC.write;
     ToIST8310_OBJ(SrvMagObj.obj)->get_tick  = SrvOsCommon.get_os_ms;
     ToIST8310_OBJ(SrvMagObj.obj)->delay     = SrvOsCommon.delay_ms;
 
@@ -83,37 +81,13 @@ static bool SrvMag_Init(void)
     if (!ToIST8310_API(SrvMagObj.api)->init(ToIST8310_OBJ(SrvMagObj.obj)))
     {
         SrvOsCommon.free(SrvMagObj.obj);
+        SrvOsCommon.free(SrvMagObj.p_sensor_data);
         return false;
     }
 
     return true;
 }
 
-/*************************************************************** Bus Comunicate Callback *******************************************************************************/
-static bool SrvMag_IICBus_Tx(uint16_t dev_addr, uint16_t reg_addr, uint8_t *p_data, uint8_t len)
-{
-    BspIICObj_TypeDef *IICBusObj = NULL;
 
-    if (SrvMagBus.init && ((p_data != NULL) || (len != 0)))
-    {
-        IICBusObj = ToIIC_BusObj(SrvMagBus.obj);
-        return ToIIC_BusAPI(SrvMagBus.api)->write(IICBusObj, dev_addr << 1, reg_addr, p_data, len);
-    }
-
-    return false;
-}
-
-static bool SrvMag_IICBus_Rx(uint16_t dev_addr, uint16_t reg_addr, uint8_t *p_data, uint8_t len)
-{
-    BspIICObj_TypeDef *IICBusObj = NULL;
-
-    if (SrvMagBus.init && ((p_data != NULL) || (len != 0)))
-    {
-        IICBusObj = ToIIC_BusObj(SrvMagBus.obj);
-        return ToIIC_BusAPI(SrvMagBus.api)->read(IICBusObj, dev_addr << 1, reg_addr, p_data, len);
-    }
-
-    return false;
-}
 
 

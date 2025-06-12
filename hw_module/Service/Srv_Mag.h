@@ -27,7 +27,7 @@ typedef struct
 {
     void *obj;
     void *api;
-    uint8_t *sensor_data;
+    uint8_t *p_sensor_data;
     uint16_t data_size;
 
     bool ready;
