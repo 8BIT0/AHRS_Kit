@@ -26,8 +26,6 @@ extern const uint8_t HWVer[3];
 #define LED3_PIN GPIO_PIN_7
 #define LED3_PORT GPIOH
 
-#define Baro_SPI_BUS NULL
-
 /* SPI3 Reserve SPI */
 #define RESERVE_SPI_CLK_PORT GPIOB
 #define RESERVE_SPI_CLK_PIN GPIO_PIN_3
@@ -74,14 +72,22 @@ extern const uint8_t HWVer[3];
 #define SecIMU_MOSI_PORT GPIOE
 #define SecIMU_MOSI_PIN GPIO_PIN_14
 
+/* Mag IIC Pin */
+#define MAG_BUS BspIIC_Instance_I2C_1
+#define MAG_SDA_PORT GPIOB
+#define MAG_SDA_PIN GPIO_PIN_7
+#define MAG_SCK_PORT GPIOB
+#define MAG_SCK_PIN GPIO_PIN_6
+
 /* Baro IIC Pin */
 #define BARO_BUS  BspIIC_Instance_I2C_2
-#define IIC2_SDA_PORT GPIOB
-#define IIC2_SDA_PIN GPIO_PIN_11
-#define IIC2_SCK_PORT GPIOB
-#define IIC2_SCK_PIN GPIO_PIN_10
+#define BARO_SDA_PORT GPIOB
+#define BARO_SDA_PIN GPIO_PIN_11
+#define BARO_SCK_PORT GPIOB
+#define BARO_SCK_PIN GPIO_PIN_10
 
 extern BspIICObj_TypeDef Baro_BusCfg;
+extern BspIICObj_TypeDef Mag_BusCfg;
 
 /* Serial Pin */
 #define UART4_TX_PORT GPIOB
@@ -102,18 +108,8 @@ extern BspIICObj_TypeDef Baro_BusCfg;
 #define RECEIVER_CRSF_RX_DMA_STREAM Bsp_DMA_Stream_None // Bsp_DMA_Stream_4
 #define RECEIVER_CRSF_TX_DMA Bsp_DMA_None               // Bsp_DMA_1
 #define RECEIVER_CRSF_TX_DMA_STREAM Bsp_DMA_Stream_None // Bsp_DMA_Stream_5
-
-#define RECEIVER_SBUS_RX_DMA Bsp_DMA_1
-#define RECEIVER_SBUS_RX_DMA_STREAM Bsp_DMA_Stream_4
-#define RECEIVER_SBUS_TX_DMA Bsp_DMA_1
-#define RECEIVER_SBUS_TX_DMA_STREAM Bsp_DMA_Stream_5
-
 #define CRSF_TX_PIN Uart4_TxPin
 #define CRSF_RX_PIN Uart4_RxPin
-
-#define SBUS_TX_PIN Uart4_TxPin
-#define SBUS_RX_PIN Uart4_RxPin
-
 #define CRSF_PIN_SWAP false
 
 /* radio uart */
@@ -163,8 +159,6 @@ extern BspGPIO_Obj_TypeDef Uart1_RxPin;
 extern BspSPI_PinConfig_TypeDef PriIMU_BusPin;
 extern BspSPI_PinConfig_TypeDef SecIMU_BusPin;
 
-extern BspIIC_PinConfig_TypeDef SrvBaro_BusPin;
-
 extern BspSPI_Config_TypeDef PriIMU_BusCfg;
 extern BspSPI_Config_TypeDef SecIMU_BusCfg;
 
@@ -179,10 +173,6 @@ void SecIMU_Dir_Tune(float *gyr, float *acc);
 
 #define Sample_Blinkly Led2
 #define Noti_LED_Ptr NULL
-#define BlackBox_Noti_Ptr NULL
-
-extern SPI_HandleTypeDef Baro_Bus_Instance;
-extern BspGPIO_Obj_TypeDef *p_Baro_CS;
 
 #ifdef __cplusplus
 }

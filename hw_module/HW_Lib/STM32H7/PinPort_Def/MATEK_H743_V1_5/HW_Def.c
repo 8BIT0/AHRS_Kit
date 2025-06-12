@@ -146,12 +146,20 @@ BspSPI_PinConfig_TypeDef SecIMU_BusPin = {
     .pin_mosi = SecIMU_MOSI_PIN,
 };
 
-BspIIC_PinConfig_TypeDef SrvBaro_BusPin = {
+BspIIC_PinConfig_TypeDef Baro_BusPin = {
     .pin_Alternate = GPIO_AF4_I2C2,
-    .port_sda = GPIOB,
-    .port_sck = GPIOB,
-    .pin_sda = GPIO_PIN_11,
-    .pin_sck = GPIO_PIN_10,
+    .port_sda = BARO_SDA_PORT,
+    .port_sck = BARO_SCK_PORT,
+    .pin_sda = BARO_SDA_PIN,
+    .pin_sck = BARO_SCK_PIN,
+};
+
+BspIIC_PinConfig_TypeDef Mag_BusPin = {
+    .pin_Alternate = GPIO_AF4_I2C1,
+    .port_sda = MAG_SDA_PORT,
+    .port_sck = MAG_SCK_PORT,
+    .pin_sda = MAG_SDA_PIN,
+    .pin_sck = MAG_SCK_PIN,
 };
 
 BspGPIO_Obj_TypeDef USB_DctPin = {
@@ -177,7 +185,13 @@ BspSPI_Config_TypeDef SecIMU_BusCfg = {
 BspIICObj_TypeDef Baro_BusCfg = {
     .init = false,
     .instance_id = BARO_BUS,
-    .Pin = &SrvBaro_BusPin,
+    .Pin = &Baro_BusPin,
+};
+
+BspIICObj_TypeDef Mag_BusCfg = {
+    .init = false,
+    .instance_id = MAG_BUS,
+    .Pin = &Mag_BusPin,
 };
 
 void PriIMU_Dir_Tune(float *gyr, float *acc)
@@ -221,9 +235,6 @@ void SecIMU_Dir_Tune(float *gyr, float *acc)
         acc[Axis_Y] = -acc_tmp[Axis_Y];
     }
 }
-
-SPI_HandleTypeDef Baro_Bus_Instance;
-BspGPIO_Obj_TypeDef *p_Baro_CS = NULL;
 
 /* debug print port uart4 */
 #define DEBUG_PORT_BAUDRATE 460800
