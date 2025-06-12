@@ -69,9 +69,9 @@ void TaskSample_Core(void const *arg)
         ay = (int16_t)(sensor_data.acc[Axis_Y] * 100);
         az = (int16_t)(sensor_data.acc[Axis_Z] * 100);
 
-        gx = (int16_t)(sensor_data.gyr[Axis_X] * 100);
-        gy = (int16_t)(sensor_data.gyr[Axis_Y] * 100);
-        gz = (int16_t)(sensor_data.gyr[Axis_Z] * 100);
+        gx = (int16_t)(sensor_data.gyr[Axis_X] * 10);
+        gy = (int16_t)(sensor_data.gyr[Axis_Y] * 10);
+        gz = (int16_t)(sensor_data.gyr[Axis_Z] * 10);
 
         mx = (int16_t)(sensor_data.mag[Axis_X] * 10);
         my = (int16_t)(sensor_data.mag[Axis_Y] * 10);
