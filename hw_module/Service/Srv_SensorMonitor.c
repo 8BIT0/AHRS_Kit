@@ -14,7 +14,7 @@ static bool SrvSensorMonitor_Mag_Init(SrvSensorMonitorObj_TypeDef *obj);
 static bool SrvSensorMonitor_Baro_Init(SrvSensorMonitorObj_TypeDef *obj);
 static SrvIMUData_TypeDef SrvSensorMonitor_Get_IMUData(SrvSensorMonitorObj_TypeDef *obj);
 static SrvBaroData_TypeDef SrvSensorMonitor_Get_BaroData(SrvSensorMonitorObj_TypeDef *obj);
-static uint32_t SrvSensorMonitor_Get_MagData(SrvSensorMonitorObj_TypeDef *obj);
+static SrvMagData_TypeDef SrvSensorMonitor_Get_MagData(SrvSensorMonitorObj_TypeDef *obj);
 
 /* external function */
 static bool SrvSensorMonitor_Init(SrvSensorMonitorObj_TypeDef *obj);
@@ -146,15 +146,22 @@ static bool SrvSensorMonitor_Mag_Init(SrvSensorMonitorObj_TypeDef *obj)
 
 static bool SrvSensorMonitor_Mag_SampleCTL(SrvSensorMonitorObj_TypeDef *obj)
 {
-    if ((obj == NULL) || !obj->init_state_reg.bit.mag)
+    if ((obj == NULL) || !obj->init_state_reg.bit.mag || \
+        (SrvMag.sample == NULL) || !SrvMag.sample())
         return false;
 
-    return false;
+    return true;
 }
 
-static uint32_t SrvSensorMonitor_Get_MagData(SrvSensorMonitorObj_TypeDef *obj)
+static SrvMagData_TypeDef SrvSensorMonitor_Get_MagData(SrvSensorMonitorObj_TypeDef *obj)
 {
-    return 0;
+    SrvMagData_TypeDef data_tmp;
+
+    memset(&data_tmp, 0, sizeof(SrvMagData_TypeDef));
+    if (obj && obj->init_state_reg.bit.mag && SrvMag.get_data)
+        SrvMag.get_data(&data_tmp);
+
+    return data_tmp;
 }
 
 /******************************************* Baro Section *********************************************/
@@ -212,8 +219,10 @@ static bool SrvSensorMonitor_SampleCTL(SrvSensorMonitorObj_TypeDef *obj)
     bool state = false;
     SrvIMUData_TypeDef imu_data;
     SrvBaroData_TypeDef baro_data;
+    SrvMagData_TypeDef mag_data;
 
     memset(&imu_data, 0, sizeof(SrvIMUData_TypeDef));
+    memset(&mag_data, 0, sizeof(SrvMagData_TypeDef));
     memset(&baro_data, 0, sizeof(SrvBaroData_TypeDef));
 
     // DebugPin.ctl(Debug_PB5, true);
@@ -228,17 +237,18 @@ static bool SrvSensorMonitor_SampleCTL(SrvSensorMonitorObj_TypeDef *obj)
     // DebugPin.ctl(Debug_PB5, false);
     baro_data = SrvSensorMonitor_Get_BaroData(obj);
     imu_data = SrvSensorMonitor_Get_IMUData(obj);
+    mag_data = SrvSensorMonitor_Get_MagData(obj);
 
     obj->data.imu_time = imu_data.time_stamp;
     obj->data.baro_time = baro_data.time_stamp;
-    obj->data.mag_time = 0;
+    obj->data.mag_time = mag_data.time_stamp;
 
     /* set data */
     for (uint8_t i = Axis_X; i < Axis_Sum; i++)
     {
         obj->data.acc[i] = imu_data.org_acc[i];
         obj->data.gyr[i] = imu_data.org_gyr[i];
-        obj->data.mag[i] = 0.0f;
+        obj->data.mag[i] = mag_data.mag[i];
     }
 
     obj->data.baro = baro_data.pressure;

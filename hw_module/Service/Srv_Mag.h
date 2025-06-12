@@ -25,12 +25,10 @@ typedef struct
 
 typedef struct
 {
+    bool init;
     void *obj;
     void *api;
-    uint8_t *p_sensor_data;
-    uint16_t data_size;
 
-    bool ready;
     SrvMagData_TypeDef data;
     uint32_t sample_cnt;
     uint32_t sample_err_cnt;
@@ -39,6 +37,8 @@ typedef struct
 typedef struct
 {
     bool (*init)(void);
+    bool (*sample)(void);
+    bool (*get_data)(SrvMagData_TypeDef *p_data);
 } SrvMag_TypeDef;
 
 extern SrvMag_TypeDef SrvMag;

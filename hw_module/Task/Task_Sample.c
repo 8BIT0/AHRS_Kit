@@ -73,9 +73,10 @@ void TaskSample_Core(void const *arg)
         gy = (int16_t)(sensor_data.gyr[Axis_Y] * 100);
         gz = (int16_t)(sensor_data.gyr[Axis_Z] * 100);
 
-        mx = (int16_t)(sensor_data.mag[Axis_X] * 100);
-        my = (int16_t)(sensor_data.mag[Axis_Y] * 100);
-        mz = (int16_t)(sensor_data.mag[Axis_Z] * 100);
+        mx = (int16_t)(sensor_data.mag[Axis_X] * 10);
+        my = (int16_t)(sensor_data.mag[Axis_Y] * 10);
+        mz = (int16_t)(sensor_data.mag[Axis_Z] * 10);
+
         /* pack mavlink frame */
         mavlink_msg_scaled_imu_pack_chan(1, 1, 0, &msg, sensor_data.imu_time, ax, ay, az, gx, gy, gz, mx, my, mz);
         frame_size = mavlink_msg_to_send_buffer(trans_buff, &msg);

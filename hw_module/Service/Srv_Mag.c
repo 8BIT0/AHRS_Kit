@@ -16,13 +16,18 @@ SrvMagObj_TypeDef SrvMagObj = {
 };
 
 /* internal function */
+static bool SrvMag_Bus_Init(void);
 
 /* external funtion */
 static bool SrvMag_Init(void);
+static bool SrvMag_Sample(void);
+static bool SrvMag_GetData(SrvMagData_TypeDef *p_data);
 
 /* external variable */
 SrvMag_TypeDef SrvMag = {
     .init = SrvMag_Init,
+    .sample = SrvMag_Sample,
+    .get_data = SrvMag_GetData,
 };
 
 static bool SrvMag_Bus_Init(void)
@@ -57,17 +62,15 @@ static bool SrvMag_Init(void)
     if (!SrvMag_Bus_Init())
         return false;
 
+    SrvMagObj.init = false;
+
     /* mag sensor module init */
     SrvMagObj.obj = SrvOsCommon.malloc(sizeof(DevIST8310Obj_TypeDef));
     SrvMagObj.api = &DevIST8310;
 
-    SrvMagObj.p_sensor_data = SrvOsCommon.malloc(IST8310_DataSize);
-    SrvMagObj.data_size = IST8310_DataSize;
-
-    if ((SrvMagObj.obj == NULL) || (SrvMagObj.p_sensor_data == NULL))
+    if (SrvMagObj.obj == NULL)
     {
         SrvOsCommon.free(SrvMagObj.obj);
-        SrvOsCommon.free(SrvMagObj.p_sensor_data);
         return false;
     }
 
@@ -81,13 +84,38 @@ static bool SrvMag_Init(void)
     if (!ToIST8310_API(SrvMagObj.api)->init(ToIST8310_OBJ(SrvMagObj.obj)))
     {
         SrvOsCommon.free(SrvMagObj.obj);
-        SrvOsCommon.free(SrvMagObj.p_sensor_data);
         return false;
+    }
+
+    SrvMagObj.init = true;
+    return true;
+}
+
+static bool SrvMag_Sample(void)
+{
+    MagData_TypeDef tmp;
+
+    memset(&tmp, 0, sizeof(MagData_TypeDef));
+    if (!SrvMagObj.init || (ToIST8310_API(SrvMagObj.api)->sample == NULL) || \
+        !ToIST8310_API(SrvMagObj.api)->sample(ToIST8310_OBJ(SrvMagObj.obj)) || \
+        !ToIST8310_API(SrvMagObj.api)->get(ToIST8310_OBJ(SrvMagObj.obj), &tmp))
+        return false;
+
+    SrvMagObj.data.time_stamp = tmp.time_stamp;
+    for (uint8_t i = Mag_Axis_X; i < Mag_Axis_Sum; i++)
+    {
+        SrvMagObj.data.mag[i] = tmp.mag[i];
     }
 
     return true;
 }
 
+static bool SrvMag_GetData(SrvMagData_TypeDef *p_data)
+{
+    if (!SrvMagObj.init || (p_data == NULL))
+        return false;
 
-
+    memcpy(p_data, &SrvMagObj.data, sizeof(SrvMagData_TypeDef));
+    return true;
+}
 
