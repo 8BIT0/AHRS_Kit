@@ -27,8 +27,8 @@ SrvBaroObj_TypeDef SrvBaroObj = {
 
 SrvBaroBusObj_TypeDef SrvBaroBus = {
     .init = false,
-    .bus_obj = NULL,
-    .bus_api = NULL,
+    .obj = NULL,
+    .api = NULL,
 };
 
 /* internal function */
@@ -96,23 +96,22 @@ SrvBaro_TypeDef SrvBaro = {
 static bool SrvBaro_BusInit(void)
 {
     SrvBaroBus.init = false;
-    SrvBaroBus.bus_obj = (void *)&Baro_BusCfg;
-    
-    SrvBaroBus.bus_api = (void *)&BspIIC;
+    SrvBaroBus.obj = (void *)&Baro_BusCfg;
+    SrvBaroBus.api = (void *)&BspIIC;
 
-    ToIIC_BusObj(SrvBaroBus.bus_obj)->handle = SrvOsCommon.malloc(I2C_HandleType_Size);
-    if (ToIIC_BusObj(SrvBaroBus.bus_obj)->handle == NULL)
+    ToIIC_BusObj(SrvBaroBus.obj)->handle = SrvOsCommon.malloc(I2C_HandleType_Size);
+    if (ToIIC_BusObj(SrvBaroBus.obj)->handle == NULL)
     {
-        SrvOsCommon.free(ToIIC_BusObj(SrvBaroBus.bus_obj)->handle);
+        SrvOsCommon.free(ToIIC_BusObj(SrvBaroBus.obj)->handle);
         return false;
     }
 
-    ToIIC_BusObj(SrvBaroBus.bus_obj)->PeriphClkInitStruct = SrvOsCommon.malloc(I2C_PeriphCLKInitType_Size);
-    if ((ToIIC_BusObj(SrvBaroBus.bus_obj)->PeriphClkInitStruct == NULL) || \
-        !ToIIC_BusAPI(SrvBaroBus.bus_api)->init(ToIIC_BusObj(SrvBaroBus.bus_obj)))
+    ToIIC_BusObj(SrvBaroBus.obj)->PeriphClkInitStruct = SrvOsCommon.malloc(I2C_PeriphCLKInitType_Size);
+    if ((ToIIC_BusObj(SrvBaroBus.obj)->PeriphClkInitStruct == NULL) || \
+        !ToIIC_BusAPI(SrvBaroBus.api)->init(ToIIC_BusObj(SrvBaroBus.obj)))
     {
-        SrvOsCommon.free(ToIIC_BusObj(SrvBaroBus.bus_obj)->handle);
-        SrvOsCommon.free(ToIIC_BusObj(SrvBaroBus.bus_obj)->PeriphClkInitStruct);
+        SrvOsCommon.free(ToIIC_BusObj(SrvBaroBus.obj)->handle);
+        SrvOsCommon.free(ToIIC_BusObj(SrvBaroBus.obj)->PeriphClkInitStruct);
         return false;
     }
 
@@ -134,26 +133,27 @@ static uint8_t SrvBaro_Init(void)
         return SrvBaro_Error_BusInit;
     }
 
-    SrvBaroObj.sensor_obj = SrvOsCommon.malloc(sizeof(DevDPS310Obj_TypeDef));
-    SrvBaroObj.sensor_api = &DevDPS310;
+    SrvBaroObj.obj = SrvOsCommon.malloc(sizeof(DevDPS310Obj_TypeDef));
+    SrvBaroObj.api = &DevDPS310;
 
-    if (SrvBaroObj.sensor_obj == NULL)
+    if (SrvBaroObj.obj == NULL)
     {
-        SrvOsCommon.free(SrvBaroObj.sensor_obj);
+        SrvOsCommon.free(SrvBaroObj.obj);
         ErrorLog.trigger(SrvBaro_Error_Handle, SrvBaro_Error_BadSensorObj, NULL, 0);
         return SrvBaro_Error_BadSensorObj;
     }
 
-    ToDPS310_OBJ(SrvBaroObj.sensor_obj)->DevAddr   = DPS310_I2C_ADDR;
-    ToDPS310_OBJ(SrvBaroObj.sensor_obj)->bus_rx    = (DevDPS310_BusRead)SrvBaro_IICBus_Rx;
-    ToDPS310_OBJ(SrvBaroObj.sensor_obj)->bus_tx    = (DevDPS310_BusWrite)SrvBaro_IICBus_Tx;
-    ToDPS310_OBJ(SrvBaroObj.sensor_obj)->get_tick  = SrvOsCommon.get_os_ms;
-    ToDPS310_OBJ(SrvBaroObj.sensor_obj)->bus_delay = SrvOsCommon.delay_ms;
+    ToDPS310_OBJ(SrvBaroObj.obj)->DevAddr   = (DPS310_I2C_ADDR << 1);
+    ToDPS310_OBJ(SrvBaroObj.obj)->bus_obj   = SrvBaroBus.obj;
+    ToDPS310_OBJ(SrvBaroObj.obj)->bus_rx    = (DevDPS310_BusRead)ToIIC_BusAPI(SrvBaroBus.api)->read;
+    ToDPS310_OBJ(SrvBaroObj.obj)->bus_tx    = (DevDPS310_BusWrite)ToIIC_BusAPI(SrvBaroBus.api)->write;
+    ToDPS310_OBJ(SrvBaroObj.obj)->get_tick  = SrvOsCommon.get_os_ms;
+    ToDPS310_OBJ(SrvBaroObj.obj)->bus_delay = SrvOsCommon.delay_ms;
 
     /* device init */
-    if (!ToDPS310_API(SrvBaroObj.sensor_api)->init(ToDPS310_OBJ(SrvBaroObj.sensor_obj)))
+    if (!ToDPS310_API(SrvBaroObj.api)->init(ToDPS310_OBJ(SrvBaroObj.obj)))
     {
-        SrvOsCommon.free(SrvBaroObj.sensor_obj);
+        SrvOsCommon.free(SrvBaroObj.obj);
         ErrorLog.trigger(SrvBaro_Error_Handle, SrvBaro_Error_DevInit, NULL, 0);
         return SrvBaro_Error_DevInit;
     }
@@ -167,7 +167,7 @@ static uint8_t SrvBaro_Init(void)
 static bool SrvBaro_Sample(void)
 {
     if ((SrvBaroObj.init_err != SrvBaro_Error_None) || \
-        (!ToDPS310_API(SrvBaroObj.sensor_api)->sample(ToDPS310_OBJ(SrvBaroObj.sensor_obj))))
+        (!ToDPS310_API(SrvBaroObj.api)->sample(ToDPS310_OBJ(SrvBaroObj.obj))))
         return false;
 
     SrvBaroObj.sample_cnt ++;
@@ -184,11 +184,11 @@ static bool SrvBaro_Get_Date(SrvBaroData_TypeDef *data)
     if ((SrvBaroObj.init_err != SrvBaro_Error_None) || \
         (data == NULL) || (SrvBaroObj.sensor_data == NULL) || \
         (SrvBaroObj.data_size == 0) || \
-        !ToDPS310_API(SrvBaroObj.sensor_api)->ready(ToDPS310_OBJ(SrvBaroObj.sensor_obj)))
+        !ToDPS310_API(SrvBaroObj.api)->ready(ToDPS310_OBJ(SrvBaroObj.obj)))
         return false;
         
     memset(SrvBaroObj.sensor_data, 0, DPS310_DataSize);
-    *ToDPS310_DataPtr(SrvBaroObj.sensor_data) = ToDPS310_API(SrvBaroObj.sensor_api)->get_data(ToDPS310_OBJ(SrvBaroObj.sensor_obj));
+    *ToDPS310_DataPtr(SrvBaroObj.sensor_data) = ToDPS310_API(SrvBaroObj.api)->get_data(ToDPS310_OBJ(SrvBaroObj.obj));
     
     /* convert baro pressure to meter */
     data->time_stamp = ToDPS310_DataPtr(SrvBaroObj.sensor_data)->time_stamp;
@@ -197,33 +197,6 @@ static bool SrvBaro_Get_Date(SrvBaroData_TypeDef *data)
     data->pressure = ToDPS310_DataPtr(SrvBaroObj.sensor_data)->scaled_press;
 
     return true;
-}
-
-/*************************************************************** Bus Comunicate Callback *******************************************************************************/
-static bool SrvBaro_IICBus_Tx(uint16_t dev_addr, uint16_t reg_addr, uint8_t *p_data, uint8_t len)
-{
-    BspIICObj_TypeDef *IICBusObj = NULL;
-
-    if (SrvBaroBus.init && ((p_data != NULL) || (len != 0)))
-    {
-        IICBusObj = ToIIC_BusObj(SrvBaroBus.bus_obj);
-        return ToIIC_BusAPI(SrvBaroBus.bus_api)->write(IICBusObj, dev_addr << 1, reg_addr, p_data, len);
-    }
-
-    return false;
-}
-
-static bool SrvBaro_IICBus_Rx(uint16_t dev_addr, uint16_t reg_addr, uint8_t *p_data, uint8_t len)
-{
-    BspIICObj_TypeDef *IICBusObj = NULL;
-
-    if (SrvBaroBus.init && ((p_data != NULL) || (len != 0)))
-    {
-        IICBusObj = ToIIC_BusObj(SrvBaroBus.bus_obj);
-        return ToIIC_BusAPI(SrvBaroBus.bus_api)->read(IICBusObj, dev_addr << 1, reg_addr, p_data, len);
-    }
-
-    return false;
 }
 
 /*************************************************************** Error Process Callback *******************************************************************************/

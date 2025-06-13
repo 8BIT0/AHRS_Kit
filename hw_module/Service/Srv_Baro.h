@@ -44,14 +44,14 @@ typedef struct
 typedef struct
 {
     bool init;
-    void *bus_api;
-    void *bus_obj;
+    void *api;
+    void *obj;
 }SrvBaroBusObj_TypeDef;
 
 typedef struct
 {
-    void *sensor_obj;
-    void *sensor_api;
+    void *obj;
+    void *api;
     uint8_t init_err;
     uint8_t *sensor_data;
     uint8_t data_size;

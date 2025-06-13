@@ -90,8 +90,6 @@ static bool DevDPS310_Init(DevDPS310Obj_TypeDef *obj)
         // Continuous pressure and temperature measurement
         DevDPS310_WriteByteToReg(obj, DPS310_MEAS_CFG_REG, DPS310_MEAS_CFG_MEAS_CTRL_CONTINUOUS_PRS_TMP);
 
-        obj->DevAddr = DPS310_I2C_ADDR;
-
         return true;
     }
 
@@ -156,7 +154,7 @@ static bool DevDPS310_Get_ProdID(DevDPS310Obj_TypeDef *obj)
 {
     uint8_t data_tmp = 0;
 
-    if(obj && obj->bus_rx && obj->bus_rx(obj->DevAddr, DPS310_PRODUCT_ID_REG, &data_tmp, 1))
+    if(obj && obj->bus_obj && obj->bus_rx && obj->bus_rx(obj->bus_obj, obj->DevAddr, DPS310_PRODUCT_ID_REG, &data_tmp, 1))
     {
         obj->ProdID = data_tmp;
         if(data_tmp == DPS310_PRODUCT_ID_VALUE)
@@ -187,9 +185,9 @@ static bool DevDPS310_Configure_Temperature(DevDPS310Obj_TypeDef *obj, uint8_t d
 
 static bool DevDPS310_WriteByteToReg(DevDPS310Obj_TypeDef *obj, uint8_t reg_addr, uint8_t data)
 {
-    if(obj && obj->bus_tx)
+    if(obj && obj->bus_obj && obj->bus_tx)
     {
-        if(!obj->bus_tx(obj->DevAddr, reg_addr, &data, 1))
+        if(!obj->bus_tx(obj->bus_obj, obj->DevAddr, reg_addr, &data, 1))
             return false;
 
         return true;
@@ -200,9 +198,9 @@ static bool DevDPS310_WriteByteToReg(DevDPS310Obj_TypeDef *obj, uint8_t reg_addr
 
 static bool DevDPS310_ReadLenByteToReg(DevDPS310Obj_TypeDef *obj, uint8_t reg_addr, uint8_t *data, uint8_t len)
 {
-    if(obj && obj->bus_rx && data && len)
+    if(obj && obj->bus_rx && obj->bus_obj && data && len)
     {
-        if(!obj->bus_rx(obj->DevAddr, reg_addr, data, len))
+        if(!obj->bus_rx(obj->bus_obj, obj->DevAddr, reg_addr, data, len))
         {
             memset(data, 0, len);
             return false;
@@ -228,7 +226,7 @@ static bool DevDPS310_Temperature_Sensor(DevDPS310Obj_TypeDef *obj, uint8_t *p_s
 {
     uint8_t read = 0;
 
-    if(obj && obj->bus_rx && obj->bus_rx(obj->DevAddr, DPS310_TMP_COEF_SRCE, &read, 1))
+    if(obj && obj->bus_rx && obj->bus_obj && obj->bus_rx(obj->bus_obj, obj->DevAddr, DPS310_TMP_COEF_SRCE, &read, 1))
     {
         read &= DPS310_TMP_COEF_SRCE_MASK;
 
@@ -250,13 +248,13 @@ static bool DevDPS310_WaitRegValue(DevDPS310Obj_TypeDef *obj, uint8_t reg_addr, 
     uint8_t read_out = 0;
     uint16_t attempts = 0;
 
-    if(obj && obj->bus_rx && obj->bus_delay)
+    if(obj && obj->bus_rx && obj->bus_obj && obj->bus_delay)
     {
         while (attempts < DPS310_WAIT_REG_TIMEOUT)
         {
             attempts++;
 
-            if(!obj->bus_rx(obj->DevAddr, reg_addr, &read_out, 1))
+            if(!obj->bus_rx(obj->bus_obj, obj->DevAddr, reg_addr, &read_out, 1))
                 return false;
 
             if ((read_out & mask) == reg_value)
@@ -276,13 +274,13 @@ static bool DevDPS310_Get_Cali_Coefs(DevDPS310Obj_TypeDef *obj)
 {
     uint8_t buff[18] = {0};
 
-    if(obj &&
+    if(obj && obj->bus_obj &&
        obj->bus_rx && 
        DevDPS310_WaitRegValue(obj, 
                               DPS310_MEAS_CFG_REG,
                               DPS310_MEAS_CFG_COEF_RDY_AVAILABLE,
                               DPS310_MEAS_CFG_COEF_RDY_AVAILABLE) &&
-       obj->bus_rx(obj->DevAddr, DPS310_COEF_REG, buff, 18))
+       obj->bus_rx(obj->bus_obj, obj->DevAddr, DPS310_COEF_REG, buff, 18))
     {
         obj->cali_coefs.c0  = DevDPS310_GetTwoComplementOf(((uint32_t) buff[0] << 4u) | (((uint32_t) buff[1] >> 4u) & 0x0Fu), 12);
         obj->cali_coefs.c1  = DevDPS310_GetTwoComplementOf(((((uint32_t) buff[1] & 0x0Fu) << 8u) | (uint32_t) buff[2]), 12);

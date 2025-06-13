@@ -9,8 +9,8 @@ extern "C" {
 #include <stdint.h>
 #include <string.h>
 
-typedef bool (*DevDPS310_BusWrite)(uint16_t dev_addr, uint16_t reg_addr, uint8_t *p_data, uint16_t len);
-typedef bool (*DevDPS310_BusRead)(uint16_t dev_addr, uint16_t reg_addr, uint8_t *p_data, uint16_t len);
+typedef bool (*DevDPS310_BusWrite)(void *bus_obj, uint16_t dev_addr, uint16_t reg_addr, uint8_t *p_data, uint16_t len);
+typedef bool (*DevDPS310_BusRead)(void *bus_obj, uint16_t dev_addr, uint16_t reg_addr, uint8_t *p_data, uint16_t len);
 typedef void (*DevDPS310_DelayMs)(uint32_t ms);
 typedef uint32_t (*DevDPS310_GetTick)(void);
 
@@ -166,6 +166,7 @@ typedef struct
     uint8_t DevAddr;
     uint8_t ProdID;
     uint32_t update_time;
+    void *bus_obj;
     float pres_factory_scale;
     float temp_factory_scale;
     float factory_scale;
